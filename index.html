@@ -976,7 +976,7 @@ async function arrancar(session){
     subs.push(S.db.collection('aprobaciones').onSnapshot(q=>{ S.aprobs=Object.fromEntries(q.docs.map(d=>[d.id,d.data()])); scheduleRender(); }));
     if(!S.pushKey) llamarFuncion({tipo:'init'}).then(r=>{ if(r.publicKey) S.pushKey=r.publicKey; });
   }
-  const h=location.hash.replace('#',''); if(['menu','compra','dulces','progreso','perfil','panel'].includes(h)) S.tab=h;
+  const h=location.hash.replace('#',''); if(['menu','compra','dulces','progreso','perfil','panel','ajustes','web'].includes(h)) S.tab=h;
   render();
   revisarSuscripcion();
 }
@@ -1218,7 +1218,7 @@ function tabsDisponibles(){
   const t=[];
   if(clienteActivo() && S.cli.perfil && S.cli.plan) t.push(['menu','Mi menú'],['compra','Lista de la compra'],['dulces','Dulces'],['progreso','Progreso'],['perfil','Mis datos']);
   else t.push(['inicio', S.admin && !S.cli ? 'Mi cuenta' : 'Inicio']);
-  if(S.admin) t.push(['panel','Clientes']);
+  if(S.admin) t.push(['panel','Clientes'],['ajustes','Ajustes'],['web','Web']);
   return t;
 }
 function pintarMarca(){
@@ -1244,7 +1244,7 @@ function render(){
   const pend = S.clientes.filter(c=>!aprobValida(S.aprobs[c.id],c)).length;
   tabs.innerHTML = list.map(([k,l])=>`<button class="tab" data-tab="${k}" aria-current="${S.tab===k}">${l}${k==='panel'&&pend?`<span class="dot">${pend}</span>`:''}</button>`).join('');
   $('#who').textContent = S.cli ? (S.cli.nombre+' '+S.cli.apellidos) : (S.admin?'Administración del centro':'');
-  const v = {inicio:vInicio, menu:vMenu, compra:vCompra, dulces:vDulces, progreso:vProgreso, perfil:vPerfil, panel:vPanel}[S.tab];
+  const v = {inicio:vInicio, menu:vMenu, compra:vCompra, dulces:vDulces, progreso:vProgreso, perfil:vPerfil, panel:vPanel, ajustes:vPanel, web:vWeb}[S.tab];
   main.innerHTML = v();
   after();
 }
@@ -1992,13 +1992,13 @@ function vPanel(){
       </form>
     </details></div></details>`;
   const diasPrecios=diffDays(fechaPrecios(),hoy());
-  return `<div class="stack"><span class="eyebrow">Panel del centro</span><h1>Clientes</h1></div>
+  const htmlClientes = `<div class="stack"><span class="eyebrow">Panel del centro</span><h1>Clientes</h1></div>
   ${verPrecios()&&diasPrecios>=14?`<div class="notice"><b>Toca revisar los precios de la compra</b><p>Hace ${diasPrecios} días que no los revisas.</p><div><button class="btn small" id="irPrecios">Revisar precios</button></div></div>`:''}
   <div class="kpis three"><div class="kpi"><span>Pendientes</span><b class="num">${nPend}</b></div><div class="kpi"><span>Con acceso</span><b class="num">${nAct}</b></div><div class="kpi"><span>Total</span><b class="num">${todos.length}</b></div></div>
   <div class="filters" role="group" aria-label="Filtrar clientes">${FILTROS_P.map(([k,l])=>`<button data-filtrop="${k}" aria-pressed="${f===k}">${l} · ${cuenta(k)}</button>`).join('')}</div>
   <div class="buscador"><input class="inp" id="buscarCli" type="search" placeholder="Buscar socio por nombre o correo" autocomplete="off" value="${esc(S.buscar||'')}" aria-label="Buscar socio"><span id="cliCuenta" class="meta"></span></div>
-  ${cs.length?`<div class="cli-list">${tarjetas}</div><button type="button" class="btn" id="cliMas" hidden style="align-self:center">Ver más</button><div class="panel" id="cliVacio" hidden><p class="prep">Ningún socio con ese nombre o correo.</p></div>`:`<div class="panel"><h3>${todos.length?'Ningún cliente en este filtro':'Todavía no hay clientes'}</h3><p class="prep">${todos.length?'Prueba con otro filtro.':'Cuando alguien se registre aparecerá aquí como pendiente. Activa su prueba gratuita o registra su pago. Puedes registrarte tú mismo en la pestaña Mi cuenta para probar todo el recorrido.'}</p></div>`}
-  <h2 style="margin-top:12px">Ajustes del centro</h2>
+  ${cs.length?`<div class="cli-list">${tarjetas}</div><button type="button" class="btn" id="cliMas" hidden style="align-self:center">Ver más</button><div class="panel" id="cliVacio" hidden><p class="prep">Ningún socio con ese nombre o correo.</p></div>`:`<div class="panel"><h3>${todos.length?'Ningún cliente en este filtro':'Todavía no hay clientes'}</h3><p class="prep">${todos.length?'Prueba con otro filtro.':'Cuando alguien se registre aparecerá aquí como pendiente. Activa su prueba gratuita o registra su pago. Puedes registrarte tú mismo en la pestaña Mi cuenta para probar todo el recorrido.'}</p></div>`}`;
+  return S.tab!=='ajustes' ? htmlClientes : `<div class="stack"><span class="eyebrow">Panel del centro</span><h1>Ajustes de la app</h1><p class="lead">Precios, revisiones, tarifas, preguntas frecuentes, mensajes para todos y datos del centro.</p></div>
   <div class="info-acc">
   ${(()=>{ const dias=diffDays(fechaPrecios(),hoy()); const ab=S.accOpen.ajPrecios;
     const porSec={}; for(const [k,z] of Object.entries(ING)) (porSec[z.s] ||= []).push([k,z]);
@@ -2028,7 +2028,6 @@ function vPanel(){
         <input class="inp" id="fq_${i}" value="${esc(q.q)}" placeholder="Pregunta"><textarea class="inp" id="fa_${i}" rows="3" placeholder="Respuesta">${esc(q.a)}</textarea></div>`).join('')}
       <div class="row"><button type="button" class="btn small" id="faqAdd">Añadir pregunta</button><button class="btn small primary">Guardar preguntas</button></div>
     </form></div></details>
-  ${bloqueWeb()}
   ${herramientas}
   </div>`;
 }
@@ -2091,11 +2090,12 @@ function reducirImagen(file){
       c.getContext('2d').drawImage(img,0,0,c.width,c.height); URL.revokeObjectURL(u); c.toBlob(b=>b?res(b):rej(new Error('jpeg')),'image/jpeg',0.82); };
     img.onerror=()=>{ URL.revokeObjectURL(u); rej(new Error('img')); }; img.src=u; });
 }
-function bloqueWeb(){
+function vWeb(){
   const T=(S.turnoEdit ||= turnosWeb().map(t=>({h:t.h, d:[...t.d]})));
   const N=noticiasWeb(), D=S.notDraft;
-  return `<details class="acc" data-acc="ajWeb" ${accAbierto('ajWeb')}><summary><span class="sum"><span>Web del centro</span><small>${turnosWeb().length} turnos · ${N.length} ${N.length===1?'noticia':'noticias'}</small><i class="chev-acc" aria-hidden="true"></i></span></summary><div class="acc-body">
-    <p class="prep">Lo que cambies aquí sale al momento en ${URL_WEB?`<a href="${URL_WEB}" target="_blank" rel="noopener">onlysportcenter.es</a>`:'la web del centro'}.</p>
+  return `<div class="stack"><span class="eyebrow">Panel del centro</span><h1>Web del centro</h1><p class="lead">Turnos y noticias de onlysportcenter.es. Lo que guardes aquí sale en la web al momento.</p></div>
+  <div class="panel stack">
+    ${URL_WEB?`<div><a class="btn small" style="text-decoration:none;color:inherit" href="${URL_WEB}" target="_blank" rel="noopener">Ver la web ↗</a></div>`:''}
     <h3>Noticias</h3>
     ${D?`<form class="stack" id="fNoticia" novalidate>
       <div class="field"><label for="nwTit">Título</label><input class="inp" id="nwTit" maxlength="120" value="${esc(D.titulo||'')}" placeholder="Ej.: Horario de Navidad"></div>
@@ -2115,7 +2115,8 @@ function bloqueWeb(){
       <p class="err" id="twErr"></p>
       <div class="row"><button type="button" class="btn small" id="twAdd">Añadir turno</button><button class="btn small primary">Guardar turnos</button></div>
     </form>
-  </div></details>`;
+    <p class="prep">El nombre, NIF, dirección y correo del aviso legal de la web se cambian en Ajustes → Mensaje para todos y otros ajustes → Datos del centro.</p>
+  </div>`;
 }
 document.addEventListener('input', e=>{ if(e.target.id==='nwTit'||e.target.id==='nwTxt') leerNoticiaWeb(); });
 document.addEventListener('change', async e=>{
@@ -2128,7 +2129,7 @@ document.addEventListener('change', async e=>{
 });
 document.addEventListener('click', async e=>{
   const t=e.target.closest('button'); if(!t) return;
-  if(t.id==='nwNueva'){ S.notDraft={titulo:'',texto:''}; S.accOpen.ajWeb=true; render(); $('#nwTit')?.focus(); return; }
+  if(t.id==='nwNueva'){ S.notDraft={titulo:'',texto:''}; render(); $('#nwTit')?.focus(); return; }
   if(t.id==='nwCancelar'){ S.notDraft=null; render(); return; }
   if(t.id==='nwQuitarFoto'){ leerNoticiaWeb(); if(S.notDraft){ S.notDraft.foto=null; S.notDraft.fotoId=null; } render(); return; }
   if(t.dataset.notedit){ const n=(S.web?.noticias||[]).find(x=>x.id===t.dataset.notedit); if(n){ S.notDraft={...n}; render(); $('#nwTit')?.focus(); } return; }
@@ -2177,7 +2178,7 @@ document.addEventListener('click', async e=>{
   if(t.dataset.tab){ S.tab=t.dataset.tab; S.medForm=false; S.editPerfil=false; S.wizard=null; render(); irArriba(); return; }
   if(t.dataset.go){ S.tab=t.dataset.go; S.medForm=true; render(); irArriba(); return; }
   if(t.dataset.dia!==undefined){ S.dia=+t.dataset.dia; render(); return; }
-  if(t.id==='irPrecios'){ S.accOpen.ajPrecios=true; render(); document.querySelector('[data-acc="ajPrecios"]')?.scrollIntoView({behavior:'smooth'}); return; }
+  if(t.id==='irPrecios'){ S.accOpen.ajPrecios=true; S.tab='ajustes'; render(); document.querySelector('[data-acc="ajPrecios"]')?.scrollIntoView({behavior:'smooth'}); return; }
   if(t.id==='preciosOk'){ t.disabled=true; await guardarCentro({preciosFecha:hoy()},'Precios marcados como revisados'); return; }
   if(t.dataset.prueba){ t.disabled=true; await setAprob(t.dataset.prueba,{activo:true, tipo:'prueba', desde:hoy(), hasta:addDays(hoy(),diasPrueba()-1), pruebaUsada:true},`Prueba activada hasta el ${fmtFecha(addDays(hoy(),diasPrueba()-1),{day:'numeric',month:'long'})}`); return; }
   if(t.dataset.pagoabrir){ S.pago = S.pago===t.dataset.pagoabrir ? null : t.dataset.pagoabrir; render(); return; }
