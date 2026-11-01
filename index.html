@@ -964,7 +964,7 @@ async function arrancar(session){
   const ref=S.db.doc('clientes/'+S.uid);
   const actual=await ref.get().catch(()=>({exists:false}));
   if(!actual.exists && meta.registro && !S.admin){
-    await ref.set({nombre:meta.registro.nombre, apellidos:meta.registro.apellidos, interes:meta.registro.interes||'prueba', email:session.user.email, creado:new Date().toISOString(), privacidad:meta.registro.privacidad, comunicaciones:meta.registro.comunicaciones}).catch(e=>console.error(e));
+    await ref.set({nombre:meta.registro.nombre, apellidos:meta.registro.apellidos, interes:meta.registro.interes||null, email:session.user.email, creado:new Date().toISOString(), privacidad:meta.registro.privacidad, comunicaciones:meta.registro.comunicaciones}).catch(e=>console.error(e));
   }
   subs.push(ref.onSnapshot(s=>{ S.cli = s.exists ? s.data() : null; scheduleRender(); }, ()=>{ S.cli=null; scheduleRender(); }));
   subs.push(S.db.doc('config/centro').onSnapshot(s=>{ S.centro = s.exists ? s.data() : {}; scheduleRender(); }));
@@ -996,7 +996,7 @@ function vAuth(){
     <p class="err" id="aErr"></p><div><button class="btn primary">Guardar contraseña</button></div></form>`;
   const tabsA=`<div class="filters" role="group" aria-label="Acceso"><button data-auth="login" aria-pressed="${modo==='login'}">Entrar</button><button data-auth="registro" aria-pressed="${modo==='registro'}">Crear cuenta</button></div>`;
   if(modo==='registro') return `${cab}<div class="stack"><span class="eyebrow">Alta de socio</span><h1>Tu plan de alimentación, ajustado a tu evolución</h1>
-    <p class="lead">Crea tu cuenta con tu correo y pide en el centro tu <b>prueba gratuita de ${diasPrueba()} días</b>. En cuanto la activemos, rellenas un cuestionario corto y recibes tu menú con la lista de la compra.</p></div>${tabsA}
+    <p class="lead">Crea tu cuenta con tu correo y ${pruebaOn()?`pide en el centro tu <b>prueba gratuita de ${diasPrueba()} días</b>`:'contrata tu tarifa en el centro'}. En cuanto la activemos, rellenas un cuestionario corto y recibes tu menú con la lista de la compra.</p></div>${tabsA}
     <form class="panel" id="fSignup" method="post" action="" novalidate>
       <div class="fgrid">
         <div class="field"><label for="rNombre">Nombre</label><input class="inp" id="rNombre" autocomplete="given-name"></div>
@@ -1019,7 +1019,7 @@ function vAuth(){
       <p class="err" id="aErr"></p>
       <div class="row" style="justify-content:space-between"><button class="btn primary">Entrar</button><button type="button" class="btn ghost small" data-auth="recuperar">He olvidado mi contraseña</button></div>
     </form>
-    <p class="fine">¿Eres socio y aún no tienes cuenta? Pulsa "Crear cuenta". Pide en el centro tu prueba gratuita de ${diasPrueba()} días.</p>
+    <p class="fine">¿Eres socio y aún no tienes cuenta? Pulsa "Crear cuenta"${pruebaOn()?` y pide en el centro tu prueba gratuita de ${diasPrueba()} días`:' y contrata tu tarifa en el centro'}.</p>
     ${bloqueInfo()}`;
 }
 const ERR_AUTH = [
@@ -1146,8 +1146,9 @@ function miAprob(){ return aprobValida(S.aprob, S.cli); }
 /* ---------- Tarifas, prueba gratuita y caducidad ---------- */
 const TARIFAS_DEF=[{id:'mensual',n:'Mensual',meses:1,precio:10},{id:'trimestral',n:'Trimestral',meses:3,precio:25},{id:'semestral',n:'Semestral',meses:6,precio:50},{id:'anual',n:'Anual',meses:12,precio:95}];
 function tarifas(){ const t=S.centro?.tarifas; return Array.isArray(t)&&t.length ? t : TARIFAS_DEF; }
-function nombreTarifa(tipo){ return tipo==='prueba' ? 'Prueba gratuita' : (tarifas().find(t=>t.id===tipo)?.n || 'Plan'); }
+function nombreTarifa(tipo){ return tipo==='prueba' ? 'Prueba gratuita' : (tarifas().find(t=>t.id===tipo)?.n || S.centro?.tarifasBorradas?.[tipo] || 'Plan'); }
 function diasPrueba(){ return Math.max(1, +(S.centro?.diasPrueba)||14); }
+function pruebaOn(){ return S.centro?.pruebaActiva===true; }
 function addMonths(iso,n){ const d=parseISO(iso); const day=d.getDate(); d.setDate(1); d.setMonth(d.getMonth()+n); const last=new Date(d.getFullYear(),d.getMonth()+1,0).getDate(); d.setDate(Math.min(day,last)); return toISO(d); }
 const fmtEurC = n => Math.abs(n-Math.round(n))<0.005 ? Math.round(n)+' €' : fmtEur(n);
 // Estado de acceso de un socio a partir de su aprobación
@@ -1160,14 +1161,14 @@ function acceso(ap){
 }
 function bloqueTarifas(){
   const t=tarifas(); const base=t.find(x=>+x.meses===1)?.precio; const mejor=t.reduce((m,x)=>(x.precio/x.meses < m.precio/m.meses ? x : m), t[0]);
-  return `<div class="trial"><b>Prueba gratis ${diasPrueba()} días</b><span>Pídela en el centro y prueba la app completa, sin compromiso.</span></div>
+  return `${pruebaOn()?`<div class="trial"><b>Prueba gratis ${diasPrueba()} días</b><span>Pídela en el centro y prueba la app completa, sin compromiso.</span></div>`:''}
   <div class="tarifas">${t.map(x=>{ const mes=x.precio/x.meses, ahorro=base?base*x.meses-x.precio:0;
     return `<div class="tarifa">${x===mejor&&t.length>1?'<span class="badge">Mejor precio</span>':''}<span class="eyebrow">${esc(x.n)}</span><b class="num">${fmtEurC(+x.precio)}</b><span>${+x.meses===1?'al mes':`${+x.meses} meses · <span style="white-space:nowrap">${fmtEurC(mes)}/mes</span>`}</span>${ahorro>0.5?`<em>Ahorras ${fmtEurC(ahorro)}</em>`:''}</div>`; }).join('')}</div>
   <p class="fine">Precios para socios de ${esc(S.centro?.marca||'Onlysport')}. Se paga en el centro y lo activamos al momento.</p>`;
 }
 function faqsDef(){ const d=diasPrueba(); return [
   ['¿Qué incluye la app?','Un menú adaptado a tu objetivo, tus gustos y tus intolerancias; la lista de la compra; recetas de dulces saludables; y el seguimiento de tu peso y tus medidas con gráficas. En cada revisión ajustamos tus calorías según cómo vas.'],
-  ['¿Cómo funciona la prueba gratuita?',`Te registras y el centro te activa la prueba. Durante ${d} días usas la app completa. Si quieres seguir, contratas una tarifa en el centro y conservas todo tu progreso. Si no, la app se cierra sola, sin cargos.`],
+  ...(pruebaOn()?[['¿Cómo funciona la prueba gratuita?',`Te registras y el centro te activa la prueba. Durante ${d} días usas la app completa. Si quieres seguir, contratas una tarifa en el centro y conservas todo tu progreso. Si no, la app se cierra sola, sin cargos.`]]:[]),
   ['¿Cómo se paga?','En el centro, en efectivo o por Bizum. En cuanto lo registramos se activa tu plan, y antes de que caduque te avisamos.'],
   ['¿Cada cuánto me tengo que pesar y medir?','Cuando te toque la revisión. La app te avisa el día antes por correo y con una notificación. Te mides tú en casa en un par de minutos: el botón "i" te enseña dónde se toma cada medida.'],
   ['¿Y si no me gusta un plato?','Pulsa "Otra opción" para cambiarlo, o "No me gusta este plato" para que no vuelva a salir. Las calorías del día se reajustan solas.'],
@@ -1177,23 +1178,25 @@ function faqsDef(){ const d=diasPrueba(); return [
   ['He olvidado mi contraseña','En la pantalla de entrar pulsa "He olvidado mi contraseña" y te llegará un correo para crear una nueva.'],
   ['¿Puedo borrar mis datos?','Sí, cuando quieras, desde Mis datos → "Borrar mi cuenta y mis datos". Se borra todo al momento.'],
 ].map(([q,a])=>({q,a})); }
-function faqs(){ const f=S.centro?.faqs; return Array.isArray(f) ? f : faqsDef(); }
+function faqs(){ const f=S.centro?.faqs; const l=Array.isArray(f) ? f : faqsDef(); return pruebaOn() ? l : l.filter(x=>!/prueba gratuita/i.test(x.q||'')); }
 S.accOpen=S.accOpen||{};
 const accAbierto=(k,def=false)=> (S.accOpen[k]??def) ? 'open' : '';
 document.addEventListener('toggle', e=>{ const d=e.target; if(d?.dataset?.acc) S.accOpen[d.dataset.acc]=d.open; }, true);
 function bloqueFaqs(pref='f'){ const l=faqs(); return l.length ? l.map((f,i)=>`<details class="faq" data-acc="${pref}${i}" ${accAbierto(pref+i)}><summary>${esc(f.q)}</summary><p>${esc(f.a).replace(/\n/g,'<br>')}</p></details>`).join('') : '<p class="prep">Aún no hay preguntas.</p>'; }
 function bloqueInfo(abrirTarifas=false){
   return `<div class="info-acc">
-    <details class="acc" data-acc="tarifas" ${accAbierto('tarifas',abrirTarifas)}><summary><span class="sum"><span>Tarifas</span><small>Desde ${fmtEurC(Math.min(...tarifas().map(t=>t.precio/t.meses)))}/mes · prueba gratis</small><i class="chev-acc" aria-hidden="true"></i></span></summary><div class="acc-body">${bloqueTarifas()}</div></details>
+    <details class="acc" data-acc="tarifas" ${accAbierto('tarifas',abrirTarifas)}><summary><span class="sum"><span>Tarifas</span><small>Desde ${fmtEurC(Math.min(...tarifas().map(t=>t.precio/t.meses)))}/mes${pruebaOn()?' · prueba gratis':''}</small><i class="chev-acc" aria-hidden="true"></i></span></summary><div class="acc-body">${bloqueTarifas()}</div></details>
     <details class="acc" data-acc="faqs" ${accAbierto('faqs')}><summary><span class="sum"><span>Preguntas frecuentes</span><small>${faqs().length} respuestas</small><i class="chev-acc" aria-hidden="true"></i></span></summary><div class="acc-body faqs">${bloqueFaqs()}</div></details>
   </div>`;
 }
-function opcionesInteres(){ return [{id:'prueba',n:'Prueba gratis',d:`${diasPrueba()} días sin compromiso`}, ...tarifas().map(t=>({id:t.id,n:t.n,d:`${fmtEurC(+t.precio)}${+t.meses===1?' al mes':` · ${+t.meses} meses`}`}))]; }
-function campoInteres(sel='prueba', titulo='¿Con qué quieres empezar?'){
+function interesDef(){ return pruebaOn() ? 'prueba' : (tarifas().find(t=>+t.meses===1)||tarifas()[0])?.id; }
+function interesOk(x){ return opcionesInteres().some(o=>o.id===x) ? x : interesDef(); }
+function opcionesInteres(){ return [...(pruebaOn()?[{id:'prueba',n:'Prueba gratis',d:`${diasPrueba()} días sin compromiso`}]:[]), ...tarifas().map(t=>({id:t.id,n:t.n,d:`${fmtEurC(+t.precio)}${+t.meses===1?' al mes':` · ${+t.meses} meses`}`}))]; }
+function campoInteres(sel, titulo='¿Con qué quieres empezar?'){ sel=interesOk(sel);
   return `<div class="field interes"><label>${titulo}</label><span class="hint">Se paga en el centro, en efectivo o por Bizum. Esto solo nos dice qué te interesa y lo puedes cambiar más tarde.</span>
     <div class="choices">${opcionesInteres().map(o=>`<div class="choice"><input type="radio" name="interes" id="in_${esc(o.id)}" value="${esc(o.id)}" ${o.id===sel?'checked':''}><label for="in_${esc(o.id)}"><b>${esc(o.n)}</b><small>${esc(o.d)}</small></label></div>`).join('')}</div></div>`;
 }
-const leerInteres=()=>document.querySelector('input[name="interes"]:checked')?.value||'prueba';
+const leerInteres=()=>document.querySelector('input[name="interes"]:checked')?.value||interesDef();
 function nombreInteres(id){ if(!id) return ''; if(id==='prueba') return 'Prueba gratis'; const t=tarifas().find(x=>x.id===id); return t?`${t.n} (${fmtEurC(+t.precio)})`:''; }
 function bloqueBorrarYo(){
   return S.borrarYo?`<div class="confirm"><b>¿Seguro que quieres borrar tu cuenta?</b><p class="prep">Se eliminan tus datos, tus medidas y tu progreso. No se puede deshacer y tendrías que volver a registrarte y esperar a que el centro te dé acceso.</p><div class="row"><button class="btn small primary" id="borrarYoOk" style="background:var(--bad);border-color:var(--bad)">Sí, borrar mi cuenta</button><button class="btn small ghost" id="borrarYoNo">Cancelar</button></div></div>`
@@ -1310,20 +1313,20 @@ function vConsentimiento(){
 function vPendiente(){
   const a=acceso(miAprob()), n=esc(S.cli.nombre);
   const T={
-    pend:['Cuenta creada','Esperando confirmación del centro',`Hola, ${n}. Pide en el centro tu <b>prueba gratuita de ${diasPrueba()} días</b> o contrata tu tarifa. En cuanto lo activemos, esta página se abrirá sola y podrás hacer el cuestionario.`],
+    pend:['Cuenta creada','Esperando confirmación del centro',`Hola, ${n}. ${pruebaOn()?`Pide en el centro tu <b>prueba gratuita de ${diasPrueba()} días</b> o contrata tu tarifa.`:'Contrata tu tarifa en el centro.'} En cuanto lo activemos, esta página se abrirá sola y podrás hacer el cuestionario.`],
     off:['Acceso pausado','Tu acceso está pausado','Habla con el centro para reactivarlo. Tus datos y tu progreso siguen guardados.'],
     prueba_fin:['Prueba terminada','Tu prueba gratuita ha terminado',`Esperamos que te haya gustado, ${n}. Para seguir con tu plan, contrata una tarifa en el centro. En cuanto lo registremos recuperas tu menú y todo tu progreso.`],
     caducado:['Plan terminado','Tu plan ha terminado',`Tu plan terminó el ${a.hasta?fmtFecha(a.hasta,{day:'numeric',month:'long'}):''}. Renuévalo en el centro y recuperas al momento tu menú y todo tu progreso.`]
   }[a.k];
   return `${logoGrande()}<div class="stack"><span class="eyebrow">${T[0]}</span><h1>${T[1]}</h1><p class="lead">${T[2]}</p></div>
-  ${a.k!=='off'?`<div class="panel" id="fInteres">${campoInteres(a.k==='prueba_fin'&&(S.cli.interes||'prueba')==='prueba'?'mensual':(S.cli.interes||'prueba'), a.k==='pend'?'Lo que has elegido':'¿Con qué tarifa quieres seguir?').replace(`<div class="choices">`, `<div class="choices">`)}</div>`:''}
+  ${a.k!=='off'?`<div class="panel" id="fInteres">${campoInteres(a.k==='prueba_fin'&&S.cli.interes==='prueba'?(tarifas().find(t=>+t.meses===1)||tarifas()[0])?.id:S.cli.interes, a.k==='pend'?'Lo que has elegido':'¿Con qué tarifa quieres seguir?').replace(`<div class="choices">`, `<div class="choices">`)}</div>`:''}
   ${bloqueInfo(a.k==='prueba_fin'||a.k==='caducado')}
   <div class="panel"><div class="fgrid">
     <div><span class="eyebrow">Nombre</span><p>${esc(S.cli.nombre)} ${esc(S.cli.apellidos)}</p></div>
     <div><span class="eyebrow">Correo</span><p style="word-break:break-all">${esc(S.cli.email)}</p></div>
     <div><span class="eyebrow">Alta</span><p>${fmtFecha(S.cli.creado.slice(0,10))}</p></div>
   </div>${bloqueBorrarYo()}</div>
-  ${S.admin?`<div class="notice ok"><b>Eres administrador</b><p>Ve a la pestaña Clientes y actívate la prueba o un plan para probar el cuestionario.</p></div>`:''}`;
+  ${S.admin?`<div class="notice ok"><b>Eres administrador</b><p>Ve a la pestaña Clientes y ${pruebaOn()?'actívate la prueba o un plan':'regístrate un pago'} para probar el cuestionario.</p></div>`:''}`;
 }
 
 function libreCampos(){
@@ -1929,8 +1932,8 @@ function vPanel(){
       ${ultPago?`<p class="meta">Último pago: <b>${fmtEurC(+ultPago.importe)}</b> (${esc(nombreTarifa(ultPago.tipo))}) el ${fmtFecha(ultPago.fecha,{day:'numeric',month:'short'})} · cubre hasta el ${fmtFecha(ultPago.hasta,{day:'numeric',month:'short',year:'numeric'})}</p>`:''}
       <div class="row">
         ${c.interes&&!ap?.hasta&&a.k==='pend'?`<span class="meta" style="flex-basis:100%">Ha pedido: <b>${esc(nombreInteres(c.interes))}</b></span>`:''}
-        ${a.k==='pend'&&!ap?.pruebaUsada?`<button class="btn small ${(c.interes||'prueba')==='prueba'?'primary':''}" data-prueba="${c.id}">Activar prueba gratis (${diasPrueba()} días)</button>`:''}
-        <button class="btn small ${a.k==='pend'&&(c.interes||'prueba')==='prueba'?'':'primary'}" data-pagoabrir="${c.id}">${a.k==='activo'?'Renovar':'Registrar pago'}</button>
+        ${a.k==='pend'&&pruebaOn()&&!ap?.pruebaUsada?`<button class="btn small ${c.interes==='prueba'?'primary':''}" data-prueba="${c.id}">Activar prueba gratis (${diasPrueba()} días)</button>`:''}
+        <button class="btn small ${a.k==='pend'&&pruebaOn()&&c.interes==='prueba'?'':'primary'}" data-pagoabrir="${c.id}">${a.k==='activo'?'Renovar':'Registrar pago'}</button>
         ${ok?`<button class="btn small" data-desactivar="${c.id}">Desactivar</button>`:''}
         ${a.k==='off'?`<button class="btn small" data-aprobar="${c.id}">Reactivar</button>`:''}
         <button class="btn small ghost danger" data-borrar="${c.id}">Borrar cliente</button>
@@ -1995,7 +1998,7 @@ function vPanel(){
   const htmlClientes = `<div class="stack"><span class="eyebrow">Panel del centro</span><h1>Clientes</h1></div>
   ${verPrecios()&&diasPrecios>=14?`<div class="notice"><b>Toca revisar los precios de la compra</b><p>Hace ${diasPrecios} días que no los revisas.</p><div><button class="btn small" id="irPrecios">Revisar precios</button></div></div>`:''}
   <div class="kpis three"><div class="kpi"><span>Pendientes</span><b class="num">${nPend}</b></div><div class="kpi"><span>Con acceso</span><b class="num">${nAct}</b></div><div class="kpi"><span>Total</span><b class="num">${todos.length}</b></div></div>
-  <div class="filters" role="group" aria-label="Filtrar clientes">${FILTROS_P.map(([k,l])=>`<button data-filtrop="${k}" aria-pressed="${f===k}">${l} · ${cuenta(k)}</button>`).join('')}</div>
+  <div class="filters" role="group" aria-label="Filtrar clientes">${FILTROS_P.filter(([k])=>k!=='prueba'||pruebaOn()||cuenta('prueba')).map(([k,l])=>`<button data-filtrop="${k}" aria-pressed="${f===k}">${l} · ${cuenta(k)}</button>`).join('')}</div>
   <div class="buscador"><input class="inp" id="buscarCli" type="search" placeholder="Buscar socio por nombre o correo" autocomplete="off" value="${esc(S.buscar||'')}" aria-label="Buscar socio"><span id="cliCuenta" class="meta"></span></div>
   ${cs.length?`<div class="cli-list">${tarjetas}</div><button type="button" class="btn" id="cliMas" hidden style="align-self:center">Ver más</button><div class="panel" id="cliVacio" hidden><p class="prep">Ningún socio con ese nombre o correo.</p></div>`:`<div class="panel"><h3>${todos.length?'Ningún cliente en este filtro':'Todavía no hay clientes'}</h3><p class="prep">${todos.length?'Prueba con otro filtro.':'Cuando alguien se registre aparecerá aquí como pendiente. Activa su prueba gratuita o registra su pago. Puedes registrarte tú mismo en la pestaña Mi cuenta para probar todo el recorrido.'}</p></div>`}`;
   return S.tab!=='ajustes' ? htmlClientes : `<div class="stack"><span class="eyebrow">Panel del centro</span><h1>Ajustes de la app</h1><p class="lead">Precios, revisiones, tarifas, preguntas frecuentes, mensajes para todos y datos del centro.</p></div>
@@ -2015,10 +2018,16 @@ function vPanel(){
     <p class="prep">Cada cuánto se pesan y se miden tus socios. El menú y la lista de la compra duran ese tiempo. Se aplica a partir de la próxima revisión de cada uno. En la ficha de cada socio puedes ponerle una frecuencia distinta.</p>
     <div class="filters" role="group" aria-label="Frecuencia">${[1,2,3,4].map(n=>`<button data-periodog="${n}" aria-pressed="${periodoCentro()===n}">${n===1?'Cada semana':`Cada ${n} semanas`}</button>`).join('')}</div>
   </div></details>
-  <details class="acc" data-acc="ajTar" ${accAbierto('ajTar')}><summary><span class="sum"><span>Tarifas y prueba gratuita</span><small>${tarifas().length} tarifas · ${diasPrueba()} días gratis</small><i class="chev-acc" aria-hidden="true"></i></span></summary><div class="acc-body">
+  <details class="acc" data-acc="ajTar" ${accAbierto('ajTar')}><summary><span class="sum"><span>Tarifas</span><small>${tarifas().length} ${tarifas().length===1?'tarifa':'tarifas'} · ${pruebaOn()?diasPrueba()+' días de prueba':'sin prueba gratis'}</small><i class="chev-acc" aria-hidden="true"></i></span></summary><div class="acc-body">
+    <p class="prep">Las ven tus socios al registrarse y en la app. Puedes cambiar el nombre, la duración y el precio, añadir tarifas o quitarlas. Quitar una tarifa no afecta a quien ya la tiene pagada.</p>
     <form class="stack" id="fTarifas" novalidate>
-      <div class="fgrid">${tarifas().map((t,i)=>`<div class="field"><label for="tn_${i}">Nombre (${t.meses} ${+t.meses===1?'mes':'meses'})</label><input class="inp" id="tn_${i}" value="${esc(t.n)}"><div class="unit"><input class="inp num" id="tp_${i}" inputmode="decimal" value="${t.precio}" aria-label="Precio ${esc(t.n)}"><span>€</span></div></div>`).join('')}
-        <div class="field"><label for="tDias">Días de prueba gratuita</label><div class="unit"><input class="inp num" id="tDias" inputmode="numeric" value="${diasPrueba()}"><span>días</span></div></div></div>
+      ${(S.tarEdit ||= tarifas().map(x=>({...x}))).map((x,i)=>`<div class="faqedit"><div class="row" style="justify-content:space-between"><span class="eyebrow">Tarifa ${i+1}</span><span class="row" style="gap:6px">${i?`<button type="button" class="btn small ghost" data-tarup="${i}" aria-label="Subir tarifa ${i+1}">↑</button>`:''}${S.tarEdit.length>1?`<button type="button" class="btn small ghost danger" data-tardel="${i}">Quitar</button>`:''}</span></div>
+        <div class="fgrid" style="grid-template-columns:1fr 1fr"><div class="field" style="grid-column:1/-1"><label for="tn_${i}">Nombre</label><input class="inp" id="tn_${i}" value="${esc(x.n)}" placeholder="Ej.: Mensual"></div>
+        <div class="field"><label for="tm_${i}">Duración</label><div class="unit"><input class="inp num" id="tm_${i}" inputmode="numeric" value="${esc(x.meses)}"><span>meses</span></div></div>
+        <div class="field"><label for="tp_${i}">Precio</label><div class="unit"><input class="inp num" id="tp_${i}" inputmode="decimal" value="${esc(String(x.precio).replace('.',','))}"><span>€</span></div></div></div></div>`).join('')}
+      <div><button type="button" class="btn small" id="tarAdd">Añadir tarifa</button></div>
+      <label class="consent"><input type="checkbox" id="tPrueba" ${pruebaOn()?'checked':''}> <span><b>Ofrecer prueba gratuita</b> <em>(si está desactivada, no aparece en ningún sitio: ni al registrarse, ni en las tarifas, ni en las preguntas, ni en el panel)</em></span></label>
+      <div class="field" id="tDiasBox" ${pruebaOn()?'':'hidden'}><label for="tDias">Días de prueba gratuita</label><div class="unit"><input class="inp num" id="tDias" inputmode="numeric" value="${diasPrueba()}"><span>días</span></div></div>
       <p class="err" id="tErr"></p><div><button class="btn small primary">Guardar tarifas</button></div>
     </form></div></details>
   <details class="acc" data-acc="ajFaq" ${accAbierto('ajFaq')}><summary><span class="sum"><span>Preguntas frecuentes</span><small>${faqs().length}</small><i class="chev-acc" aria-hidden="true"></i></span></summary><div class="acc-body">
@@ -2032,6 +2041,7 @@ function vPanel(){
   </div>`;
 }
 function cliPorId(id){ return S.clientes.find(c=>c.id===id); }
+function leerTarifas(){ S.tarEdit=(S.tarEdit||[]).map((x,i)=>({...x, n:$('#tn_'+i)?.value ?? x.n, meses:$('#tm_'+i)?.value ?? x.meses, precio:$('#tp_'+i)?.value ?? x.precio})); }
 function leerFaqs(){ S.faqEdit=(S.faqEdit||[]).map((q,i)=>({q:$('#fq_'+i)?.value ?? q.q, a:$('#fa_'+i)?.value ?? q.a})); }
 async function registrarPago(id, tipo){
   const c=cliPorId(id), ap=aprobValida(S.aprobs[id],c)||{}, a=acceso(ap), t=tarifas().find(x=>x.id===tipo); if(!t) return;
@@ -2184,6 +2194,9 @@ document.addEventListener('click', async e=>{
   if(t.dataset.pagoabrir){ S.pago = S.pago===t.dataset.pagoabrir ? null : t.dataset.pagoabrir; render(); return; }
   if(t.dataset.pagar){ t.disabled=true; const [id,tipo]=t.dataset.pagar.split('|'); await registrarPago(id,tipo); return; }
   if(t.dataset.deshacerpago){ t.disabled=true; await deshacerPago(t.dataset.deshacerpago); return; }
+  if(t.id==='tarAdd'){ leerTarifas(); S.tarEdit.push({id:'t'+Date.now().toString(36), n:'', meses:'', precio:''}); render(); $('#tn_'+(S.tarEdit.length-1))?.focus(); return; }
+  if(t.dataset.tardel!==undefined){ leerTarifas(); S.tarEdit.splice(+t.dataset.tardel,1); render(); return; }
+  if(t.dataset.tarup!==undefined){ leerTarifas(); const i=+t.dataset.tarup; [S.tarEdit[i-1],S.tarEdit[i]]=[S.tarEdit[i],S.tarEdit[i-1]]; render(); return; }
   if(t.id==='faqAdd'){ leerFaqs(); S.faqEdit.push({q:'',a:''}); render(); $('#fq_'+(S.faqEdit.length-1))?.focus(); return; }
   if(t.dataset.faqdel!==undefined){ leerFaqs(); S.faqEdit.splice(+t.dataset.faqdel,1); render(); return; }
   if(t.dataset.faqup!==undefined){ leerFaqs(); const i=+t.dataset.faqup; [S.faqEdit[i-1],S.faqEdit[i]]=[S.faqEdit[i],S.faqEdit[i-1]]; render(); return; }
@@ -2238,6 +2251,7 @@ document.addEventListener('pointerout', e=>{ if(e.target.closest?.('.hit')) quit
 document.addEventListener('change', e=>{
   const el=e.target;
   if(el.name==='interes' && el.closest('#fInteres') && S.cli){ guardarCli({interes:el.value}).then(ok=>ok&&toast('Guardado: '+nombreInteres(el.value)+'. Te lo activamos en el centro.')); return; }
+  if(el.id==='tPrueba'){ const b=$('#tDiasBox'); if(b) b.hidden=!el.checked; return; }
   if(el.id==='togPrecios'){ guardarCentro({mostrarPrecios:el.checked}, el.checked?'Precios visibles para los socios':'Precios ocultos para los socios'); return; }
   if(el.id==='ceLogo'){ subirLogo(el.files?.[0]); return; }
   if(el.dataset.periodo!==undefined){ setAprob(el.dataset.periodo,{periodo: el.value?+el.value:null},'Frecuencia guardada'); return; }
@@ -2275,11 +2289,15 @@ document.addEventListener('submit', async e=>{
   if(f.id==='fCons'){ const cons=leerConsentimiento('#cErr'); if(!cons) return; btn.disabled=true; if(await guardarCli(cons)) toast('Gracias. Ya puedes seguir.'); btn.disabled=false; return; }
   if(f.id==='fCentro'){ btn.disabled=true; await guardarCentro({nombre:$('#ceNombre').value.trim(), nif:$('#ceNif').value.trim(), direccion:$('#ceDir').value.trim(), email:$('#ceMail').value.trim()},'Datos del centro guardados'); btn.disabled=false; return; }
   if(f.id==='fTarifas'){
-    const nuevas=tarifas().map((t,i)=>({...t, n:($('#tn_'+i).value.trim()||t.n), precio:parseFloat(String($('#tp_'+i).value).replace(',','.'))}));
-    const dias=parseInt($('#tDias').value,10);
-    if(nuevas.some(t=>!(t.precio>=0))) return $('#tErr').textContent='Revisa los precios.';
-    if(!(dias>=1&&dias<=60)) return $('#tErr').textContent='Los días de prueba deben estar entre 1 y 60.';
-    btn.disabled=true; await guardarCentro({tarifas:nuevas, diasPrueba:dias},'Tarifas guardadas'); btn.disabled=false; return; }
+    leerTarifas(); const num=v=>parseFloat(String(v).replace(',','.'));
+    const L=S.tarEdit.map(x=>({id:x.id, n:String(x.n).trim(), meses:parseInt(x.meses,10), precio:Math.round(num(x.precio)*100)/100}));
+    if(!L.length) return $('#tErr').textContent='Deja al menos una tarifa.';
+    const mal=L.findIndex(x=>!x.n || !(x.meses>=1&&x.meses<=36) || !(x.precio>=0&&x.precio<10000));
+    if(mal>=0) return $('#tErr').textContent=`Revisa la tarifa ${mal+1}: nombre, duración (1 a 36 meses) y precio.`;
+    const on=$('#tPrueba').checked, dias=parseInt($('#tDias').value,10);
+    if(on && !(dias>=1&&dias<=60)) return $('#tErr').textContent='Los días de prueba deben estar entre 1 y 60.';
+    const borradas={...(S.centro?.tarifasBorradas||{})}; for(const x of tarifas()) if(!L.some(y=>y.id===x.id)) borradas[x.id]=x.n;
+    btn.disabled=true; if(await guardarCentro({tarifas:L, pruebaActiva:on, ...(on?{diasPrueba:dias}:{}), tarifasBorradas:borradas},'Tarifas guardadas')) S.tarEdit=null; btn.disabled=false; render(); return; }
   if(f.id==='fFaqs'){ leerFaqs(); const l=S.faqEdit.map(x=>({q:x.q.trim(),a:x.a.trim()})).filter(x=>x.q&&x.a); btn.disabled=true; if(await guardarCentro({faqs:l},'Preguntas guardadas')) S.faqEdit=null; btn.disabled=false; return; }
   if(f.id==='fPrecios'){
     const precios={...(S.centro?.precios||{})}; let mal=null;
