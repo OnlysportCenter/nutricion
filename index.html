@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Onlysport Nutrición</title>
+<title>Onlysport Menús</title>
 <meta name="description" content="Propuestas de menú saludable para socios de Onlysport Center">
 <meta name="theme-color" content="#FFFFFF" id="metaTema">
 <script>try{var t=localStorage.getItem('tema');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
@@ -414,7 +414,7 @@ details[open] summary{margin-bottom:10px}
 <header class="top">
   <div class="wrap">
     <div class="brand">
-      <div class="name"><span class="mark" id="brandMark" aria-hidden="true"></span><span><span id="brandName">Onlysport</span><small>Nutrición</small></span></div>
+      <div class="name"><span class="mark" id="brandMark" aria-hidden="true"></span><span><span id="brandName">Onlysport</span><small>Menús</small></span></div>
       <span class="row" style="gap:10px;align-items:center"><span class="who" id="who"></span><button class="icon-btn" id="temaBtn" type="button" aria-label="Cambiar entre modo claro y oscuro" title="Apariencia"></button><button class="btn small ghost" id="salir" hidden>Salir</button></span>
     </div>
     <nav class="tabs" id="tabs" aria-label="Secciones"></nav>
@@ -1040,7 +1040,7 @@ function vAuth(){
       <div><button class="btn primary">Crear mi cuenta</button></div>
     </form>
     ${bloqueInfo()}`;
-  return `${cab}<div class="stack"><span class="eyebrow">Nutrición para socios</span><h1>Entra en la app</h1></div>${tabsA}
+  return `${cab}<div class="stack"><span class="eyebrow">Menús saludables para socios</span><h1>Entra en la app</h1></div>${tabsA}
     <form class="panel" id="fLogin" method="post" action="" novalidate>
       <div class="field"><label for="aEmail">Correo electrónico</label><input class="inp" id="aEmail" name="email" type="email" autocomplete="username" inputmode="email" value="${esc(S.authEmail||'')}"></div>
       <div class="field"><label for="aPass">Contraseña</label><div class="pass"><input class="inp" id="aPass" name="password" type="password" autocomplete="current-password">${ojo('aPass')}</div></div>

@@ -1,11 +1,11 @@
-// Onlysport Nutrición · recibe las notificaciones aunque la app esté cerrada
+// Onlysport Menús · recibe las notificaciones aunque la app esté cerrada
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
 
 self.addEventListener('push', (event) => {
   let d = {};
   try { d = event.data ? event.data.json() : {}; } catch { d = { body: event.data && event.data.text() }; }
-  const title = d.title || 'Onlysport Nutrición';
+  const title = d.title || 'Onlysport Menús';
   event.waitUntil(self.registration.showNotification(title, {
     body: d.body || '',
     icon: 'icons/icon-192.png',
