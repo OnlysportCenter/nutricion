@@ -2282,8 +2282,8 @@ document.addEventListener('input', e=>{ if(e.target.id==='chatTxt') S.chatBorr=e
 document.addEventListener('keydown', e=>{ if(e.target.id==='chatTxt' && e.key==='Enter' && !e.shiftKey && !e.isComposing){ e.preventDefault(); enviarPregunta(e.target.value); } });
 document.addEventListener('submit', e=>{ if(e.target.id==='fChat'){ e.preventDefault(); enviarPregunta($('#chatTxt').value); } });
 async function guardarCentro(patch, okMsg){
-  try{ await S.db.doc('config/centro').set({...(S.centro||{}), ...patch}); toast(okMsg); return true; }
-  catch(e){ toast('No se ha podido guardar. Inténtalo de nuevo.'); return false; }
+  try{ await S.db.doc('config/centro').set({...(S.centro||{}), ...patch}); S.centro={...(S.centro||{}), ...patch}; toast(okMsg); return true; }
+  catch(e){ console.error('guardarCentro', e); toast('No se ha podido guardar: '+(e?.message||'error de conexión')+'. Prueba a salir y volver a entrar.'); return false; }
 }
 
 /* ===================== EVENTOS ===================== */
@@ -2405,11 +2405,12 @@ document.addEventListener('submit', async e=>{
   if(f.id==='fTarifas'){
     leerTarifas(); const num=v=>parseFloat(String(v).replace(',','.'));
     const L=S.tarEdit.map(x=>({id:x.id, n:String(x.n).trim(), meses:parseInt(x.meses,10), precio:Math.round(num(x.precio)*100)/100}));
-    if(!L.length) return $('#tErr').textContent='Deja al menos una tarifa.';
+    const errT=m=>{ const e=$('#tErr'); if(e){ e.textContent=m; e.scrollIntoView({block:'center', behavior:'smooth'}); } toast(m); };
+    if(!L.length) return errT('Deja al menos una tarifa.');
     const mal=L.findIndex(x=>!x.n || !(x.meses>=1&&x.meses<=36) || !(x.precio>=0&&x.precio<10000));
-    if(mal>=0) return $('#tErr').textContent=`Revisa la tarifa ${mal+1}: nombre, duración (1 a 36 meses) y precio.`;
+    if(mal>=0) return errT(`No se ha guardado: revisa la tarifa ${mal+1} (nombre, duración de 1 a 36 meses y precio).`);
     const on=$('#tPrueba').checked, dias=parseInt($('#tDias').value,10);
-    if(on && !(dias>=1&&dias<=60)) return $('#tErr').textContent='Los días de prueba deben estar entre 1 y 60.';
+    if(on && !(dias>=1&&dias<=60)) return errT('No se ha guardado: los días de prueba deben estar entre 1 y 60.');
     const borradas={...(S.centro?.tarifasBorradas||{})}; for(const x of tarifas()) if(!L.some(y=>y.id===x.id)) borradas[x.id]=x.n;
     btn.disabled=true; if(await guardarCentro({tarifas:L, pruebaActiva:on, ...(on?{diasPrueba:dias}:{}), tarifasBorradas:borradas},'Tarifas guardadas')) S.tarEdit=null; btn.disabled=false; render(); return; }
   if(f.id==='fFaqs'){ leerFaqs(); const l=S.faqEdit.map(x=>({q:x.q.trim(),a:x.a.trim()})).filter(x=>x.q&&x.a); btn.disabled=true; if(await guardarCentro({faqs:l},'Preguntas guardadas')) S.faqEdit=null; btn.disabled=false; return; }
