@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Onlysport Nutrición</title>
-<meta name="description" content="Plan de alimentación para socios de Onlysport Center">
+<meta name="description" content="Propuestas de menú saludable para socios de Onlysport Center">
 <meta name="theme-color" content="#FFFFFF" id="metaTema">
 <script>try{var t=localStorage.getItem('tema');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
 <link rel="manifest" href="manifest.webmanifest">
@@ -1011,8 +1011,8 @@ function vAuth(){
     <div class="field"><label for="aPass2">Repite la contraseña</label><input class="inp" id="aPass2" type="password" autocomplete="new-password"></div>
     <p class="err" id="aErr"></p><div><button class="btn primary">Guardar contraseña</button></div></form>`;
   const tabsA=`<div class="filters" role="group" aria-label="Acceso"><button data-auth="login" aria-pressed="${modo==='login'}">Entrar</button><button data-auth="registro" aria-pressed="${modo==='registro'}">Crear cuenta</button></div>`;
-  if(modo==='registro') return `${cab}<div class="stack"><span class="eyebrow">Alta de socio</span><h1>Tu plan de alimentación, ajustado a tu evolución</h1>
-    <p class="lead">Crea tu cuenta con tu correo y ${pruebaOn()?`pide en el centro tu <b>prueba gratuita de ${diasPrueba()} días</b>`:'contrata tu tarifa en el centro'}. En cuanto la activemos, rellenas un cuestionario corto y recibes tu menú con la lista de la compra.</p></div>${tabsA}
+  if(modo==='registro') return `${cab}<div class="stack"><span class="eyebrow">Alta de socio</span><h1>Tu menú semanal de comida sana, en el móvil</h1>
+    <p class="lead">Crea tu cuenta con tu correo y ${pruebaOn()?`pide en el centro tu <b>prueba gratuita de ${diasPrueba()} días</b>`:'contrata tu tarifa en el centro'}. En cuanto la activemos, rellenas un cuestionario corto y la app te propone tus menús con la lista de la compra.</p></div>${tabsA}
     <form class="panel" id="fSignup" method="post" action="" novalidate>
       <div class="fgrid">
         <div class="field"><label for="rNombre">Nombre</label><input class="inp" id="rNombre" autocomplete="given-name"></div>
@@ -1027,7 +1027,7 @@ function vAuth(){
       <div><button class="btn primary">Crear mi cuenta</button></div>
     </form>
     ${bloqueInfo()}`;
-  return `${cab}<div class="stack"><span class="eyebrow">Nutrición para socios</span><h1>Entra en tu plan</h1></div>${tabsA}
+  return `${cab}<div class="stack"><span class="eyebrow">Nutrición para socios</span><h1>Entra en la app</h1></div>${tabsA}
     <form class="panel" id="fLogin" method="post" action="" novalidate>
       <div class="field"><label for="aEmail">Correo electrónico</label><input class="inp" id="aEmail" name="email" type="email" autocomplete="username" inputmode="email" value="${esc(S.authEmail||'')}"></div>
       <div class="field"><label for="aPass">Contraseña</label><div class="pass"><input class="inp" id="aPass" name="password" type="password" autocomplete="current-password">${ojo('aPass')}</div></div>
@@ -1180,12 +1180,14 @@ function bloqueTarifas(){
   return `${pruebaOn()?`<div class="trial"><b>Prueba gratis ${diasPrueba()} días</b><span>Pídela en el centro y prueba la app completa, sin compromiso.</span></div>`:''}
   <div class="tarifas">${t.map(x=>{ const mes=x.precio/x.meses, ahorro=base?base*x.meses-x.precio:0;
     return `<div class="tarifa">${x===mejor&&t.length>1?'<span class="badge">Mejor precio</span>':''}<span class="eyebrow">${esc(x.n)}</span><b class="num">${fmtEurC(+x.precio)}</b><span>${+x.meses===1?'al mes':`${+x.meses} meses · <span style="white-space:nowrap">${fmtEurC(mes)}/mes</span>`}</span>${ahorro>0.5?`<em>Ahorras ${fmtEurC(ahorro)}</em>`:''}</div>`; }).join('')}</div>
-  <p class="fine">Precios para socios de ${esc(S.centro?.marca||'Onlysport')}. Se paga en el centro y lo activamos al momento.</p>`;
+  <p class="fine">Precios para socios de ${esc(S.centro?.marca||'Onlysport')}. Se paga en el centro y lo activamos al momento. El pago es por adelantado y no se devuelve una vez hecho, salvo que el centro no pueda prestar el servicio.</p>`;
 }
 function faqsDef(){ const d=diasPrueba(); return [
-  ['¿Qué incluye la app?','Un menú adaptado a tu objetivo, tus gustos y tus intolerancias; la lista de la compra; recetas de dulces saludables; y el seguimiento de tu peso y tus medidas con gráficas. En cada revisión ajustamos tus calorías según cómo vas.'],
+  ['¿Qué incluye la app?','Propuestas de menú semanales según tu objetivo, tus gustos y tus intolerancias, que la app genera automáticamente; la lista de la compra; recetas de dulces saludables; y el seguimiento de tu peso y tus medidas con gráficas. En cada revisión la app recalcula las cantidades según cómo vas.'],
+  ['¿Es una dieta?','No. La app genera propuestas de menú orientativas de alimentación saludable para personas sanas. No es una dieta ni un tratamiento, y no sustituye a un dietista-nutricionista ni a tu médico. Si tienes una enfermedad, estás embarazada o en lactancia, o tienes o has tenido un trastorno de la conducta alimentaria, consulta con un profesional sanitario antes de seguir ningún menú.'],
   ...(pruebaOn()?[['¿Cómo funciona la prueba gratuita?',`Te registras y el centro te activa la prueba. Durante ${d} días usas la app completa. Si quieres seguir, contratas una tarifa en el centro y conservas todo tu progreso. Si no, la app se cierra sola, sin cargos.`]]:[]),
-  ['¿Cómo se paga?','En el centro, en efectivo o por Bizum. En cuanto lo registramos se activa tu plan, y antes de que caduque te avisamos.'],
+  ['¿Cómo se paga?','En el centro, en efectivo o por Bizum, por adelantado. En cuanto lo registramos se activa tu plan, y antes de que caduque te avisamos.'],
+  ['¿Me devolvéis el dinero si lo dejo?','No. Una vez pagada, la tarifa no se devuelve, aunque dejes de usar la app antes de que termine. Solo se devuelve si el centro no puede prestarte el servicio. Por eso, antes de pagar, pregúntanos lo que quieras.'],
   ['¿Cada cuánto me tengo que pesar y medir?','Cuando te toque la revisión. La app te avisa el día antes por correo y con una notificación. Te mides tú en casa en un par de minutos: el botón "i" te enseña dónde se toma cada medida.'],
   ['¿Y si no me gusta un plato?','Pulsa "Otra opción" para cambiarlo, o "No me gusta este plato" para que no vuelva a salir. Las calorías del día se reajustan solas.'],
   ['Tengo una intolerancia o alergia, ¿me sirve?','Sí. La indicas en el cuestionario y la app quita esos alimentos o te pone la versión sin gluten o sin lactosa. Si tienes una alergia grave o una enfermedad, consulta antes con tu médico o con un dietista-nutricionista.'],
@@ -1209,7 +1211,7 @@ function interesDef(){ return pruebaOn() ? 'prueba' : (tarifas().find(t=>+t.mese
 function interesOk(x){ return opcionesInteres().some(o=>o.id===x) ? x : interesDef(); }
 function opcionesInteres(){ return [...(pruebaOn()?[{id:'prueba',n:'Prueba gratis',d:`${diasPrueba()} días sin compromiso`}]:[]), ...tarifas().map(t=>({id:t.id,n:t.n,d:`${fmtEurC(+t.precio)}${+t.meses===1?' al mes':` · ${+t.meses} meses`}`}))]; }
 function campoInteres(sel, titulo='¿Con qué quieres empezar?'){ sel=interesOk(sel);
-  return `<div class="field interes"><label>${titulo}</label><span class="hint">Se paga en el centro, en efectivo o por Bizum. Esto solo nos dice qué te interesa y lo puedes cambiar más tarde.</span>
+  return `<div class="field interes"><label>${titulo}</label><span class="hint">Se paga en el centro, en efectivo o por Bizum, y no se devuelve una vez pagado. Esto solo nos dice qué te interesa y lo puedes cambiar más tarde.</span>
     <div class="choices">${opcionesInteres().map(o=>`<div class="choice"><input type="radio" name="interes" id="in_${esc(o.id)}" value="${esc(o.id)}" ${o.id===sel?'checked':''}><label for="in_${esc(o.id)}"><b>${esc(o.n)}</b><small>${esc(o.d)}</small></label></div>`).join('')}</div></div>`;
 }
 const leerInteres=()=>document.querySelector('input[name="interes"]:checked')?.value||interesDef();
@@ -1232,7 +1234,7 @@ function avisoFinPlan(){
     <details class="acc" data-acc="tarifasAviso" ${accAbierto('tarifasAviso')}><summary><span class="sum"><span>Ver tarifas</span><i class="chev-acc" aria-hidden="true"></i></span></summary><div class="acc-body">${bloqueTarifas()}</div></details></div>`;
 }
 
-function clienteActivo(){ return !!(S.cli && S.cli.privacidad && acceso(miAprob()).ok); }
+function clienteActivo(){ return !!(consOk(S.cli) && acceso(miAprob()).ok); }
 function tabsDisponibles(){
   const t=[];
   if(clienteActivo() && S.cli.perfil && S.cli.plan) t.push(['menu','Mi menú'],['compra','Lista de la compra'],['dulces','Dulces'],['progreso','Progreso'],...(asistenteVisible()?[['asistente','Asistente']]:[]),['perfil','Mis datos']);
@@ -1271,7 +1273,7 @@ function render(){
 /* ---- Inicio: registro / pendiente / cuestionario ---- */
 function vInicio(){
   if(!S.cli) return vRegistro();
-  if(!S.cli.privacidad) return vConsentimiento();
+  if(!consOk(S.cli)) return vConsentimiento();
   if(!acceso(miAprob()).ok) return vPendiente();
   if(!S.cli.perfil) return vWizard();
   return '';
@@ -1293,16 +1295,17 @@ function vRegistro(){
   </form>
   ${S.admin?`<p class="fine">Estás viendo la app como administrador. Puedes registrarte tú también para probarla como cliente, o ir a la pestaña Clientes.</p>`:''}`;
 }
-const PRIV_VER='2026-10';
+const PRIV_VER='2026-11';
+const consOk=c=>!!(c && c.privacidad && c.privacidad.apto===true);
 function datoCentro(k, def){ return (S.centro && S.centro[k]) ? esc(S.centro[k]) : def; }
 function textoPrivacidad(){
   const nom=datoCentro('nombre','el centro deportivo'), nif=datoCentro('nif',''), dir=datoCentro('direccion',''), mail=datoCentro('email','');
   return `<div class="legal">
     <p><b>Responsable.</b> ${nom}${nif?`, NIF ${nif}`:''}${dir?`, ${dir}`:''}.${mail?` Contacto: ${mail}.`:''}</p>
     <p><b>Qué datos tratamos.</b> Nombre, apellidos y correo; sexo, edad, altura, peso y medidas corporales; actividad física; preferencias de comida, intolerancias y alergias; suplementos que tomas.</p>
-    <p><b>Para qué.</b> Gestionar tu acceso como socio, preparar tu plan de alimentación orientativo, ajustarlo periódicamente según tu evolución y, si lo aceptas, enviarte recordatorios y mensajes de ánimo.</p>
+    <p><b>Para qué.</b> Gestionar tu acceso como socio, generar tus propuestas de menú orientativas, recalcularlas periódicamente según tu evolución y, si lo aceptas, enviarte recordatorios y mensajes de ánimo.</p>
     <p><b>Base legal.</b> Tu consentimiento expreso, en especial para los datos de salud (artículos 6.1.a y 9.2.a del RGPD), y la relación de socio con el centro.</p>
-    <p><b>Quién los ve.</b> Solo tú y el personal del centro. No se ceden a terceros. Los proveedores tecnológicos que alojan la aplicación (Supabase, con servidores en la Unión Europea, y GitHub Pages, de GitHub Inc., para la web, adherido al Marco de Privacidad de Datos UE-EE. UU.). Si usas el asistente de preguntas, tu pregunta y los datos de tu menú se envían a Anthropic (EE. UU., adherida al mismo Marco) solo para generar la respuesta; no los usa para entrenar sus modelos. Tus preguntas quedan guardadas y el centro puede leerlas para mejorar el servicio y Google (Gmail, para enviarte los correos) los tratan por cuenta del centro, sin usarlos para otros fines.</p>
+    <p><b>Quién los ve.</b> Solo tú y el personal del centro. No se ceden a terceros. Los tratan por cuenta del centro, sin usarlos para otros fines, los proveedores tecnológicos de la app: Supabase (servidores en la Unión Europea), GitHub Pages (GitHub Inc., para la web) y Google (Gmail, para enviarte los correos); GitHub y Google están adheridos al Marco de Privacidad de Datos UE-EE. UU. Si usas el asistente de preguntas, tu pregunta y los datos de tu menú se envían a Anthropic (EE. UU., adherida al mismo Marco) solo para generar la respuesta, sin usarlos para entrenar sus modelos; tus preguntas quedan guardadas y el centro puede leerlas para mejorar el servicio.</p>
     <p><b>Cuánto tiempo.</b> Mientras seas socio y uses la app. Puedes borrar tu cuenta y todos tus datos cuando quieras desde "Mis datos", o pedírselo al centro.</p>
     <p><b>Tus derechos.</b> Acceso, rectificación, supresión, oposición, limitación, portabilidad y retirar tu consentimiento en cualquier momento${mail?`, escribiendo a ${mail}`:', dirigiéndote al centro'}. Si crees que no se respetan, puedes reclamar ante la Agencia Española de Protección de Datos (aepd.es).</p>
   </div>`;
@@ -1312,18 +1315,20 @@ function bloqueConsentimiento(){
   return `<details class="privacy"><summary>Leer la política de privacidad</summary>${textoPrivacidad()}</details>
     <div class="stack" style="gap:10px">
     ${ck('cPriv','He leído y acepto la política de privacidad.',true)}
-    ${ck('cSalud','Doy mi consentimiento expreso para que se traten mis datos de salud (peso, medidas, intolerancias y alergias) con el único fin de preparar y ajustar mi plan.',true)}
-    ${ck('cAviso','Entiendo que el plan son recomendaciones orientativas para personas sanas. Si tengo una enfermedad, estoy embarazada o tengo una alergia grave, consultaré con un dietista-nutricionista o con mi médico.',true)}
+    ${ck('cSalud','Doy mi consentimiento expreso para que se traten mis datos de salud (peso, medidas, intolerancias y alergias) con el único fin de generar y recalcular mis propuestas de menú.',true)}
+    ${ck('cAviso','Entiendo que los menús son propuestas orientativas de alimentación saludable que la app genera automáticamente. No son una dieta ni un tratamiento, y no sustituyen a un dietista-nutricionista ni a mi médico.',true)}
+    ${ck('cApto','Declaro que soy mayor de edad, que no tengo ninguna enfermedad que necesite una alimentación especial (como diabetes o problemas de riñón, digestivos o de corazón), que no estoy embarazada ni en periodo de lactancia y que no tengo ni he tenido un trastorno de la conducta alimentaria. Si algo de esto cambia, dejaré de seguir los menús y lo consultaré con un profesional sanitario.',true)}
+    <p class="fine">¿No puedes marcar esta última casilla? Entonces esta app no es para ti: consulta con tu médico o con un dietista-nutricionista. En el centro te seguimos ayudando con el entrenamiento.</p>
     ${ck('cCom','Quiero recibir recordatorios y mensajes de ánimo del centro.',false)}
     </div>`;
 }
 function leerConsentimiento(errId){
-  if(!$('#cPriv').checked || !$('#cSalud').checked || !$('#cAviso').checked){ $(errId).textContent='Para usar la app tienes que aceptar la política de privacidad, el tratamiento de tus datos de salud y el aviso sobre las recomendaciones.'; return null; }
-  return {privacidad:{version:PRIV_VER, fecha:new Date().toISOString(), salud:true}, comunicaciones:$('#cCom').checked};
+  if(!$('#cPriv').checked || !$('#cSalud').checked || !$('#cAviso').checked || !$('#cApto').checked){ $(errId).textContent='Para usar la app tienes que marcar las cuatro primeras casillas: privacidad, datos de salud, el aviso sobre los menús y la declaración.'; return null; }
+  return {privacidad:{version:PRIV_VER, fecha:new Date().toISOString(), salud:true, apto:true}, comunicaciones:$('#cCom').checked};
 }
 function vConsentimiento(){
-  return `<div class="stack"><span class="eyebrow">Protección de datos</span><h1>Antes de seguir, revisa cómo tratamos tus datos</h1>
-  <p class="lead">Hemos actualizado la app y necesitamos tu consentimiento para seguir guardando tu información.</p></div>
+  return `<div class="stack"><span class="eyebrow">Protección de datos</span><h1>Antes de seguir, revisa las condiciones de la app</h1>
+  <p class="lead">Hemos actualizado las condiciones de la app. Léelas y vuelve a aceptarlas para seguir; tus menús y tu progreso siguen guardados.</p></div>
   <form class="panel" id="fCons" novalidate>${bloqueConsentimiento()}<p class="err" id="cErr"></p><div><button class="btn primary">Aceptar y continuar</button></div></form>`;
 }
 function vPendiente(){
@@ -1504,7 +1509,7 @@ function vMenu(){
   </div>${libreHoy?`<p class="fine">El objetivo de hoy descuenta tu ${lib.tipo==='cena'?'cena':'comida'} libre (${plan.kcal} kcal en un día normal).</p>`:''}`}
   ${asistenteVisible()?`<div><button class="btn small" data-tab="asistente">¿Dudas con tu menú? Pregunta al asistente</button></div>`:''}
   <div class="meals">${meals}${tarjetaCreatina(c)}</div>
-  <p class="fine">Las cantidades son en crudo salvo legumbres de bote. Bebe agua a demanda; café e infusiones sin azúcar, libres. ${falta>1?`Próxima revisión: ${fmtFecha(prox,{weekday:'long',day:'numeric',month:'long'})}.`:''}</p>`;
+  <p class="fine">Propuesta de menú orientativa, generada automáticamente con tus datos y pensada para personas sanas. No es una dieta ni sustituye a un dietista-nutricionista. Las cantidades son en crudo salvo legumbres de bote. Bebe agua a demanda; café e infusiones sin azúcar, libres. ${falta>1?`Próxima revisión: ${fmtFecha(prox,{weekday:'long',day:'numeric',month:'long'})}.`:''}</p>`;
 }
 const ANIMO = [
   'No hace falta hacerlo perfecto, hace falta hacerlo casi todos los días.',

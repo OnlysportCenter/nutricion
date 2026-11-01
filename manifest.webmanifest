@@ -1,7 +1,7 @@
 {
   "name": "Onlysport Nutrición",
   "short_name": "Onlysport",
-  "description": "Tu plan de alimentación de Onlysport Center",
+  "description": "Tus menús semanales de Onlysport Center",
   "lang": "es",
   "start_url": "./",
   "scope": "./",
