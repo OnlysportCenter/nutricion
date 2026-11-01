@@ -371,6 +371,22 @@ details[open] summary{margin-bottom:10px}
 .notitem b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .notitem small{color:var(--muted)}
 .notprev{max-width:220px;border-radius:10px}
+.chat{display:flex;flex-direction:column;gap:10px}
+.burbuja{max-width:88%;padding:11px 14px;border-radius:16px;line-height:1.45;font-size:.95rem;word-wrap:break-word}
+.burbuja.yo{align-self:flex-end;background:var(--accent);color:var(--accent-ink);border-bottom-right-radius:5px}
+.burbuja.ia{align-self:flex-start;background:var(--surface);border:1px solid var(--line);border-bottom-left-radius:5px}
+.burbuja.err{border-color:var(--bad);color:var(--bad)}
+.burbuja.pensando{display:flex;gap:5px;padding:14px 16px}
+.burbuja.pensando span{width:7px;height:7px;border-radius:50%;background:var(--muted);animation:bot 1s infinite ease-in-out}
+.burbuja.pensando span:nth-child(2){animation-delay:.15s}.burbuja.pensando span:nth-child(3){animation-delay:.3s}
+@keyframes bot{0%,80%,100%{opacity:.25;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
+@media (prefers-reduced-motion:reduce){.burbuja.pensando span{animation:none;opacity:.6}}
+.sug{display:flex;flex-direction:column;align-items:stretch;gap:8px}
+.sugerencia{text-align:left;padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-size:.95rem;cursor:pointer}
+.sugerencia:hover{border-color:var(--ink)}
+.chat-form{position:sticky;bottom:0;display:flex;gap:8px;align-items:flex-end;padding:10px 0 calc(10px + env(safe-area-inset-bottom,0px));background:var(--bg)}
+.chat-form textarea{flex:1;resize:none;min-height:48px}
+.linkbtn{background:none;border:0;padding:0;font:inherit;color:inherit;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 .faqedit{display:flex;flex-direction:column;gap:6px;padding:12px;border-radius:12px;background:var(--sunk)}
 .consent{display:flex;gap:10px;align-items:flex-start;font-size:.9rem;cursor:pointer}
 .consent input{margin-top:3px;width:18px;height:18px;flex:0 0 auto;accent-color:var(--accent)}
@@ -976,7 +992,7 @@ async function arrancar(session){
     subs.push(S.db.collection('aprobaciones').onSnapshot(q=>{ S.aprobs=Object.fromEntries(q.docs.map(d=>[d.id,d.data()])); scheduleRender(); }));
     if(!S.pushKey) llamarFuncion({tipo:'init'}).then(r=>{ if(r.publicKey) S.pushKey=r.publicKey; });
   }
-  const h=location.hash.replace('#',''); if(['menu','compra','dulces','progreso','perfil','panel','ajustes','web'].includes(h)) S.tab=h;
+  const h=location.hash.replace('#',''); if(['menu','compra','dulces','progreso','perfil','panel','ajustes','web','asistente'].includes(h)) S.tab=h;
   render();
   revisarSuscripcion();
 }
@@ -1219,7 +1235,7 @@ function avisoFinPlan(){
 function clienteActivo(){ return !!(S.cli && S.cli.privacidad && acceso(miAprob()).ok); }
 function tabsDisponibles(){
   const t=[];
-  if(clienteActivo() && S.cli.perfil && S.cli.plan) t.push(['menu','Mi menú'],['compra','Lista de la compra'],['dulces','Dulces'],['progreso','Progreso'],['perfil','Mis datos']);
+  if(clienteActivo() && S.cli.perfil && S.cli.plan) t.push(['menu','Mi menú'],['compra','Lista de la compra'],['dulces','Dulces'],['progreso','Progreso'],...(asistenteVisible()?[['asistente','Asistente']]:[]),['perfil','Mis datos']);
   else t.push(['inicio', S.admin && !S.cli ? 'Mi cuenta' : 'Inicio']);
   if(S.admin) t.push(['panel','Clientes'],['ajustes','Ajustes'],['web','Web']);
   return t;
@@ -1247,7 +1263,7 @@ function render(){
   const pend = S.clientes.filter(c=>!aprobValida(S.aprobs[c.id],c)).length;
   tabs.innerHTML = list.map(([k,l])=>`<button class="tab" data-tab="${k}" aria-current="${S.tab===k}">${l}${k==='panel'&&pend?`<span class="dot">${pend}</span>`:''}</button>`).join('');
   $('#who').textContent = S.cli ? (S.cli.nombre+' '+S.cli.apellidos) : (S.admin?'Administración del centro':'');
-  const v = {inicio:vInicio, menu:vMenu, compra:vCompra, dulces:vDulces, progreso:vProgreso, perfil:vPerfil, panel:vPanel, ajustes:vPanel, web:vWeb}[S.tab];
+  const v = {inicio:vInicio, menu:vMenu, compra:vCompra, dulces:vDulces, progreso:vProgreso, perfil:vPerfil, panel:vPanel, ajustes:vPanel, web:vWeb, asistente:vAsistente}[S.tab];
   main.innerHTML = v();
   after();
 }
@@ -1286,7 +1302,7 @@ function textoPrivacidad(){
     <p><b>Qué datos tratamos.</b> Nombre, apellidos y correo; sexo, edad, altura, peso y medidas corporales; actividad física; preferencias de comida, intolerancias y alergias; suplementos que tomas.</p>
     <p><b>Para qué.</b> Gestionar tu acceso como socio, preparar tu plan de alimentación orientativo, ajustarlo periódicamente según tu evolución y, si lo aceptas, enviarte recordatorios y mensajes de ánimo.</p>
     <p><b>Base legal.</b> Tu consentimiento expreso, en especial para los datos de salud (artículos 6.1.a y 9.2.a del RGPD), y la relación de socio con el centro.</p>
-    <p><b>Quién los ve.</b> Solo tú y el personal del centro. No se ceden a terceros. Los proveedores tecnológicos que alojan la aplicación (Supabase, con servidores en la Unión Europea, y GitHub Pages, de GitHub Inc., para la web, adherido al Marco de Privacidad de Datos UE-EE. UU.) y Google (Gmail, para enviarte los correos) los tratan por cuenta del centro, sin usarlos para otros fines.</p>
+    <p><b>Quién los ve.</b> Solo tú y el personal del centro. No se ceden a terceros. Los proveedores tecnológicos que alojan la aplicación (Supabase, con servidores en la Unión Europea, y GitHub Pages, de GitHub Inc., para la web, adherido al Marco de Privacidad de Datos UE-EE. UU.). Si usas el asistente de preguntas, tu pregunta y los datos de tu menú se envían a Anthropic (EE. UU., adherida al mismo Marco) solo para generar la respuesta; no los usa para entrenar sus modelos. Tus preguntas quedan guardadas y el centro puede leerlas para mejorar el servicio y Google (Gmail, para enviarte los correos) los tratan por cuenta del centro, sin usarlos para otros fines.</p>
     <p><b>Cuánto tiempo.</b> Mientras seas socio y uses la app. Puedes borrar tu cuenta y todos tus datos cuando quieras desde "Mis datos", o pedírselo al centro.</p>
     <p><b>Tus derechos.</b> Acceso, rectificación, supresión, oposición, limitación, portabilidad y retirar tu consentimiento en cualquier momento${mail?`, escribiendo a ${mail}`:', dirigiéndote al centro'}. Si crees que no se respetan, puedes reclamar ante la Agencia Española de Protección de Datos (aepd.es).</p>
   </div>`;
@@ -1486,6 +1502,7 @@ function vMenu(){
     <div><b>${tot.C} g</b><span>hidratos</span></div>
     <div><b>${tot.F} g</b><span>grasas</span></div>
   </div>${libreHoy?`<p class="fine">El objetivo de hoy descuenta tu ${lib.tipo==='cena'?'cena':'comida'} libre (${plan.kcal} kcal en un día normal).</p>`:''}`}
+  ${asistenteVisible()?`<div><button class="btn small" data-tab="asistente">¿Dudas con tu menú? Pregunta al asistente</button></div>`:''}
   <div class="meals">${meals}${tarjetaCreatina(c)}</div>
   <p class="fine">Las cantidades son en crudo salvo legumbres de bote. Bebe agua a demanda; café e infusiones sin azúcar, libres. ${falta>1?`Próxima revisión: ${fmtFecha(prox,{weekday:'long',day:'numeric',month:'long'})}.`:''}</p>`;
 }
@@ -2037,6 +2054,7 @@ function vPanel(){
         <input class="inp" id="fq_${i}" value="${esc(q.q)}" placeholder="Pregunta"><textarea class="inp" id="fa_${i}" rows="3" placeholder="Respuesta">${esc(q.a)}</textarea></div>`).join('')}
       <div class="row"><button type="button" class="btn small" id="faqAdd">Añadir pregunta</button><button class="btn small primary">Guardar preguntas</button></div>
     </form></div></details>
+  ${bloqueIA()}
   ${herramientas}
   </div>`;
 }
@@ -2167,13 +2185,91 @@ document.addEventListener('submit', async e=>{
   if(await guardarWeb({noticias:[n, ...(S.web?.noticias||[]).filter(x=>x.id!==n.id)].slice(0,60)}, D.id?'Noticia actualizada':'Noticia publicada en la web')){ S.notDraft=null; render(); if(prev?.fotoId && prev.fotoId!==n.fotoId) borrarImagenWeb(prev.fotoId); }
   btn.disabled=false;
 });
+
+/* ---------- Asistente de preguntas (IA) ---------- */
+function asistenteOn(){ return S.centro?.asistente===true; }
+function asistenteVisible(){ return asistenteOn() || !!S.admin; }
+const DIAS_N=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+function contextoAsistente(){
+  const c=S.cli, pf=c.perfil||{}, plan=c.plan, u=(c.mediciones||[]).slice(-1)[0]||{};
+  const L=[];
+  L.push(`Nombre: ${c.nombre}`);
+  L.push(`Objetivo: ${OBJETIVOS[pf.objetivo]?.n||pf.objetivo}. ${pf.sexo==='H'?'Hombre':'Mujer'}, ${pf.edad} años, ${pf.altura} cm, ${u.peso??'?'} kg. Entrena ${pf.entrenos} días por semana.`);
+  L.push(`Dieta: ${DIETAS[pf.dieta]?.n||'Como de todo'}. Intolerancias o alergias: ${(pf.intolerancias||[]).map(k=>INTOL[k]||k).join(', ')||'ninguna'}.`);
+  L.push(`No le gusta: ${[...(pf.noGusta||[]).map(k=>ING[k]?.n||k), pf.noGustaTexto].filter(Boolean).join(', ')||'nada indicado'}.`);
+  L.push(`Suplementos: ${(pf.suplementos||[]).join(', ')||'ninguno'}.`);
+  const lib=libreDe(pf); L.push(`Comida libre: ${lib?`los ${DIAS_N[lib.dia]} (${lib.tipo==='dia'?'todo el día':lib.tipo})`:'no tiene'}.`);
+  L.push(`Objetivo diario del menú: ${plan.kcal} kcal y ${plan.prot} g de proteína. Las cantidades son en crudo salvo legumbres de bote.`);
+  const h=indiceHoy(plan), n=diasPlan(plan);
+  for(let d=Math.max(0,h-1); d<n; d++){
+    const det=d>=h && d<=h+2, FD=factoresDia(plan,d,pf);
+    L.push(`\n## ${fmtFecha(addDays(plan.inicio,d),{weekday:'long',day:'numeric',month:'long'})}${d===h?' (HOY)':d===h+1?' (MAÑANA)':d===h-1?' (AYER)':''}`);
+    if(diaLibre(plan,d,pf) && lib?.tipo==='dia'){ L.push('- Día libre: come lo que le apetezca.'); continue; }
+    for(const ti of TIPOS){
+      if(esLibre(plan,d,ti,pf)){ L.push(`- ${TIPO_LABEL[ti]}: comida libre`); continue; }
+      const r=RECMAP[plan.dias[d]?.[ti]]; if(!r) continue;
+      if(!det){ L.push(`- ${TIPO_LABEL[ti]}: ${r.n}`); continue; }
+      let k=0; const ings=r.i.map(([key,g])=>{ const x=redondear(key,g*FD[ti]); k+=ING[key].k*x.g/100; return `${ingNombre(key,pf)} ${x.txt}`; }).join('; ');
+      L.push(`- ${TIPO_LABEL[ti]} (${Math.round(k)} kcal): ${r.n}. Ingredientes: ${ings}. Preparación: ${r.p}${r.x.length?` Además: ${r.x.join(', ')}.`:''}`);
+    }
+  }
+  return L.join('\n');
+}
+function chatLeer(){ if(!S.chat) S.chat=store.get('chat_'+S.uid)||[]; return S.chat; }
+function fmtChat(s){ return esc(s).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/^#+\s*/gm,'').replace(/^[-*]\s+/gm,'• ').replace(/\n/g,'<br>'); }
+const SUGERENCIAS=['¿Cómo preparo la comida de hoy?','Hoy me falta un ingrediente, ¿por qué lo cambio?','Mañana como fuera, ¿qué hago?','¿Qué ceno si llego tarde de entrenar?'];
+function vAsistente(){
+  const L=chatLeer();
+  return `<div class="stack"><span class="eyebrow">Asistente · IA</span><h1>Pregunta sobre tu menú</h1><p class="lead">Conoce tu menú, tus gustos y tus intolerancias. Pregúntale cómo cocinar un plato, por qué cambiar un alimento o qué hacer si comes fuera.</p></div>
+  ${S.admin&&!asistenteOn()?`<div class="notice"><b>Solo lo ves tú</b><p>El asistente está desactivado para los socios. Actívalo en Ajustes → Asistente de preguntas cuando esté configurado.</p></div>`:''}
+  <div class="chat" id="chat">${L.length?L.map(m=>`<div class="burbuja ${m.r==='u'?'yo':'ia'}${m.err?' err':''}">${fmtChat(m.t)}</div>`).join(''):`<div class="sug">${SUGERENCIAS.map(s=>`<button type="button" class="sugerencia" data-sug="${esc(s)}">${esc(s)}</button>`).join('')}</div>`}${S.chatEnv?'<div class="burbuja ia pensando" aria-label="Escribiendo"><span></span><span></span><span></span></div>':''}</div>
+  <form class="chat-form" id="fChat" novalidate><textarea class="inp" id="chatTxt" rows="2" maxlength="600" placeholder="Escribe tu pregunta…" aria-label="Tu pregunta" ${S.chatEnv?'disabled':''}>${esc(S.chatBorr||'')}</textarea><button class="btn primary" ${S.chatEnv?'disabled':''}>Enviar</button></form>
+  <p class="fine">Respuestas orientativas generadas por inteligencia artificial a partir de tu menú. No sustituyen a tu médico ni a un dietista-nutricionista.${S.chatQuedan!=null?` Te quedan ${S.chatQuedan} preguntas hoy.`:''}${L.length?' <button type="button" class="linkbtn" id="chatBorrar">Borrar conversación</button>':''}</p>`;
+}
+const ERR_IA={desactivado:'El asistente no está disponible ahora mismo.', sin_acceso:'Tu plan no está activo. Renuévalo en el centro para seguir preguntando.', sin_clave:'El asistente aún no está configurado. Avisa al centro.', clave_mala:'El asistente no está bien configurado. Avisa al centro.', ocupado:'Hay mucha gente preguntando. Inténtalo en un minuto.', sesion:'Tu sesión ha caducado. Sal y vuelve a entrar.', vacia:'Escribe tu pregunta.'};
+async function enviarPregunta(q){
+  q=String(q||'').trim(); if(q.length<2 || S.chatEnv) return;
+  const L=chatLeer(); const hist=L.filter(m=>!m.err).slice(-6).map(m=>({r:m.r,t:m.t}));
+  L.push({r:'u',t:q}); S.chatBorr=''; S.chatEnv=true; S.chatBajar=true; render();
+  let res;
+  try{
+    const {data,error}=await sb.functions.invoke('asistente',{body:{pregunta:q, historial:hist, contexto:contextoAsistente()}});
+    if(error){ let j={}; try{ j=await error.context.json(); }catch{} res={error:j.error||'red', limite:j.limite}; } else res=data||{};
+  }catch(e){ res={error:'red'}; }
+  S.chatEnv=false;
+  if(res.respuesta){ L.push({r:'a',t:res.respuesta}); S.chatQuedan=res.quedan; }
+  else { if(res.error==='limite') S.chatQuedan=0; } if(!res.respuesta) L.push({r:'a',err:true,t:res.error==='limite'?`Has llegado al límite de ${res.limite||''} preguntas de hoy. Mañana puedes seguir preguntando.`:(ERR_IA[res.error]||'No se ha podido enviar la pregunta. Revisa tu conexión e inténtalo de nuevo.')});
+  S.chat=L.slice(-40); store.set('chat_'+S.uid,S.chat); S.chatBajar=true; render();
+}
+function nombreSocio(uid){ const c=cliPorId(uid); return c?`${c.nombre} ${c.apellidos}`:'Socio'; }
+function bloqueIA(){
+  return `<details class="acc" data-acc="ajIA" ${accAbierto('ajIA')}><summary><span class="sum"><span>Asistente de preguntas (IA)</span><small>${asistenteOn()?'activado':'desactivado'}</small><i class="chev-acc" aria-hidden="true"></i></span></summary><div class="acc-body">
+    <p class="prep">Una pestaña "Asistente" donde cada socio pregunta sobre su menú y le contesta una inteligencia artificial (Claude, de Anthropic), que conoce su menú, sus gustos y sus intolerancias. Cuesta menos de 0,1 céntimos por pregunta. Antes de activarlo sigue la guía: cuenta de Anthropic con tope de gasto, clave en Supabase y función "asistente".</p>
+    <label class="consent"><input type="checkbox" id="togIA" ${asistenteOn()?'checked':''}> <span><b>Activar el asistente para los socios</b> <em>(${asistenteOn()?'los socios ven la pestaña Asistente':'ahora no lo ve ningún socio; tú sí, para probarlo'})</em></span></label>
+    <div class="field"><label for="iaLim">Preguntas por socio y día</label><div class="row"><div class="unit" style="max-width:170px"><input class="inp num" id="iaLim" inputmode="numeric" value="${S.centro?.asistenteLimite||15}"><span>al día</span></div><button type="button" class="btn small" id="iaLimOk">Guardar</button></div></div>
+    <div><button type="button" class="btn small" id="iaVer">${S.iaLog?'Actualizar':'Ver las últimas preguntas'}</button></div>
+    ${S.iaLog?(S.iaLog.length?`<div class="stack" style="gap:6px">${S.iaLog.map(q=>`<details class="faq"><summary>${esc(q.pregunta)}<small style="display:block;color:var(--muted);font-weight:400;margin-top:2px">${esc(nombreSocio(q.user_id))} · ${fmtFecha(String(q.creado).slice(0,10),{day:'numeric',month:'short'})}</small></summary><p>${fmtChat(q.respuesta||'')}</p></details>`).join('')}</div>`:'<p class="prep">Todavía no hay preguntas.</p>'):''}
+  </div></details>`;
+}
+document.addEventListener('click', async e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  if(b.dataset.sug){ enviarPregunta(b.dataset.sug); return; }
+  if(b.id==='chatBorrar'){ S.chat=[]; store.set('chat_'+S.uid,[]); render(); return; }
+  if(b.id==='iaLimOk'){ const v=parseInt($('#iaLim').value,10); if(!(v>=1&&v<=100)){ toast('Pon un número entre 1 y 100.'); return; } await guardarCentro({asistenteLimite:v},'Límite guardado: '+v+' preguntas al día'); return; }
+  if(b.id==='iaVer'){ b.disabled=true; const {data,error}=await sb.from('preguntas').select('creado,pregunta,respuesta,user_id').order('creado',{ascending:false}).limit(50); b.disabled=false;
+    if(error){ toast('No se han podido cargar. ¿Has creado la tabla del asistente (paso de la guía)?'); return; } S.iaLog=data||[]; render(); return; }
+});
+document.addEventListener('change', e=>{ if(e.target.id==='togIA') guardarCentro({asistente:e.target.checked}, e.target.checked?'Asistente activado para los socios':'Asistente desactivado'); });
+document.addEventListener('input', e=>{ if(e.target.id==='chatTxt') S.chatBorr=e.target.value; });
+document.addEventListener('keydown', e=>{ if(e.target.id==='chatTxt' && e.key==='Enter' && !e.shiftKey && !e.isComposing){ e.preventDefault(); enviarPregunta(e.target.value); } });
+document.addEventListener('submit', e=>{ if(e.target.id==='fChat'){ e.preventDefault(); enviarPregunta($('#chatTxt').value); } });
 async function guardarCentro(patch, okMsg){
   try{ await S.db.doc('config/centro').set({...(S.centro||{}), ...patch}); toast(okMsg); return true; }
   catch(e){ toast('No se ha podido guardar. Inténtalo de nuevo.'); return false; }
 }
 
 /* ===================== EVENTOS ===================== */
-function after(){ if(S.tab==='panel'){ filtrarListaCli(); if(S.scrollCli){ S.scrollCli=false; document.querySelector('.cli.open')?.scrollIntoView({block:'start', behavior:'smooth'}); } } const d=document.querySelector('.day[aria-current="true"]'); if(d){ const c=d.parentElement; c.scrollLeft=Math.max(0,d.offsetLeft-c.offsetLeft-c.clientWidth/2+d.offsetWidth/2); } }
+function after(){ if(S.tab==='asistente' && S.chatBajar){ S.chatBajar=false; window.scrollTo(0,document.documentElement.scrollHeight); } if(S.tab==='panel'){ filtrarListaCli(); if(S.scrollCli){ S.scrollCli=false; document.querySelector('.cli.open')?.scrollIntoView({block:'start', behavior:'smooth'}); } } const d=document.querySelector('.day[aria-current="true"]'); if(d){ const c=d.parentElement; c.scrollLeft=Math.max(0,d.offsetLeft-c.offsetLeft-c.clientWidth/2+d.offsetWidth/2); } }
 function irArriba(){ try{ window.scrollTo({top:0}); }catch{} }
 document.addEventListener('click', async e=>{
   const t=e.target.closest('button,[data-item]'); if(!t) return;
