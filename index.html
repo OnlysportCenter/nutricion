@@ -717,14 +717,17 @@ function ultimaMed(cli){ const m=cli.mediciones||[]; return m[m.length-1]; }
 function objetivoNutricional(cli){
   const pf=cli.perfil; const peso=ultimaMed(cli).peso;
   const bmr = 10*peso + 6.25*pf.altura - 5*pf.edad + (pf.sexo==='H'?5:-161);
-  const e=pf.entrenos; let fa = e<=0?1.2 : e<=2?1.375 : e<=4?1.55 : e<=6?1.725 : 1.9;
+  // Actividad: sesiones de 1 hora; 5-6 días cuentan como actividad alta, no muy alta
+  const e=pf.entrenos; let fa = e<=0?1.2 : e<=2?1.375 : e<=4?1.55 : e<=6?1.65 : 1.75;
   fa += pf.trabajo==='fisico'?0.1 : pf.trabajo==='pie'?0.05 : 0;
   const tdee = bmr*fa; const o=OBJETIVOS[pf.objetivo];
   let kcal = tdee*(1+o.adj) + (pf.ajusteKcal||0);
   const suelo = pf.sexo==='H'?1500:1200;
   kcal = Math.max(suelo, Math.round(kcal/10)*10);
-  const prot = Math.round(o.pk*peso);
-  const grasa = Math.round(Math.max(0.8*peso, 0.27*kcal/9));
+  // Con sobrepeso, proteína y grasa mínima sobre un peso de referencia (el de un IMC de 25), no sobre el peso total
+  const pesoRef = Math.min(peso, 25*(pf.altura/100)**2);
+  const prot = Math.round(o.pk*pesoRef);
+  const grasa = Math.round(Math.max(0.8*pesoRef, 0.27*kcal/9));
   const hc = Math.max(0, Math.round((kcal - prot*4 - grasa*9)/4));
   return {kcal, prot, grasa, hc, bmr:Math.round(bmr), tdee:Math.round(tdee)};
 }
@@ -736,9 +739,12 @@ function semanaHoy(plan){ return Math.min(semanasPlan(plan)-1, Math.max(0, Math.
 function periodoCentro(){ return +(S.centro?.periodo) || 2; }
 function periodoDe(id, c){ const ap = id===S.uid ? miAprob() : aprobValida(S.aprobs?.[id], c); return +(ap?.periodo) || periodoCentro(); }
 function miPeriodo(){ return periodoDe(S.uid, S.cli); }
+// Parte de las calorías de un plato que viene de la proteína
+function densProt(r){ let p=0; for(const [key,g] of r.i) p+=(ING[key].p||0)*g/100; return p*4/Math.max(1,r.k); }
 function generarPlan(cli, inicio, semilla, semanas=2){
   const obj = objetivoNutricional(cli); const el = elegibles(cli);
   const rand = rng(hash(semilla));
+  const densObj = obj.prot*4/obj.kcal;
   const orden = {}; const pos = {};
   for(const t of TIPOS){ orden[t]=shuffle(el[t].map(r=>r.id), rand); pos[t]=0; }
   const dias=[];
@@ -748,11 +754,18 @@ function generarPlan(cli, inicio, semilla, semanas=2){
       const l=orden[t]; if(!l.length){ dia[t]=null; continue; }
       const fijo=cli.perfil?.fijos?.[t];
       if(fijo && RECMAP[fijo] && recetaPermitida(RECMAP[fijo],cli,true)){ dia[t]=fijo; continue; }
-      let id=l[pos[t]%l.length]; pos[t]++;
-      if(t==='cena' && dia.comida && l.length>2){
-        const prin = rid => RECMAP[rid].i[0][0];
-        if(prin(id)===prin(dia.comida)){ id=l[pos[t]%l.length]; pos[t]++; }
+      // Entre los 3 siguientes platos de la rotación, el que mejor encaja con la proteína que pide el objetivo
+      // (la cena, además, con un ingrediente principal distinto al de la comida). Así se mantiene la variedad.
+      const prin = rid => RECMAP[rid].i[0][0];
+      const k0=pos[t]%l.length; let mejor=k0, mejorS=-1e9;
+      for(let j=0;j<Math.min(3,l.length);j++){
+        const k=(pos[t]+j)%l.length, r=RECMAP[l[k]];
+        const rep = t==='cena' && dia.comida && l.length>2 && prin(l[k])===prin(dia.comida);
+        const dv=densProt(r)-densObj, s=(dv<0?2*dv:-0.5*dv) - (rep?1:0) - j*0.004;
+        if(s>mejorS){ mejorS=s; mejor=k; }
       }
+      [l[k0],l[mejor]]=[l[mejor],l[k0]];
+      const id=l[k0]; pos[t]++;
       dia[t]=id;
     }
     dias.push(dia);
