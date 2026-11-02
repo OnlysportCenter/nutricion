@@ -318,8 +318,19 @@ details[open] summary{margin-bottom:10px}
 .cli-body .head h3,.cli-body .head .pill{display:none}
 @media (max-width:440px){.cli-row .pill{max-width:110px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
 .interes .choices{grid-template-columns:repeat(2,minmax(0,1fr))}
-.interes .choice:first-child{grid-column:1/-1}
-.interes .choice label{padding:10px 12px}
+.interes .choice.prueba-op{grid-column:1/-1}
+.interes .choice label{padding:14px 14px 12px;gap:2px;position:relative;transition:border-color .15s,box-shadow .15s}
+.interes .choice label b.num{font-family:var(--f-display);font-size:1.6rem;font-weight:700;line-height:1.1}
+.interes .choice label .per{font-size:.8rem;color:var(--muted)}
+.interes .choice label em{font-style:normal;font-size:.75rem;font-weight:700;color:var(--good)}
+.interes .choice label .badge{align-self:flex-start;margin-bottom:4px;font-size:.66rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:2px 7px;border-radius:999px;background:var(--good-soft);color:var(--good)}
+.interes .choice label .tick{position:absolute;top:10px;right:10px;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line);display:grid;place-items:center;color:transparent;background:var(--surface)}
+.interes .choice label .tick svg{width:13px;height:13px}
+.interes .choice input:checked + label .tick{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.interes .choice input:checked + label{background:var(--surface)}
+.interes .choice.prueba-op label{background:var(--good-soft);border-color:transparent}
+.interes .choice.prueba-op label b{color:var(--good);font-size:1.05rem}
+.interes .choice.prueba-op input:checked + label{box-shadow:inset 0 0 0 2px var(--good);border-color:var(--good)}
 .fijo-tag{display:inline-flex;align-items:center;padding:4px 10px;border-radius:999px;background:var(--c1-soft);color:var(--c1);font-size:.78rem;font-weight:700}
 .precios-sec{display:flex;flex-direction:column;gap:2px}
 .precio-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px solid var(--line)}
@@ -1235,10 +1246,15 @@ function bloqueInfo(abrirTarifas=false){
 }
 function interesDef(){ return pruebaOn() ? 'prueba' : (tarifas().find(t=>+t.meses===1)||tarifas()[0])?.id; }
 function interesOk(x){ return opcionesInteres().some(o=>o.id===x) ? x : interesDef(); }
-function opcionesInteres(){ return [...(pruebaOn()?[{id:'prueba',n:'Prueba gratis',d:`${diasPrueba()} días sin compromiso`}]:[]), ...tarifas().map(t=>({id:t.id,n:t.n,d:`${fmtEurC(+t.precio)}${+t.meses===1?' al mes':` · ${+t.meses} meses`}`}))]; }
+function opcionesInteres(){ return [...(pruebaOn()?[{id:'prueba',n:'Prueba gratis',d:`${diasPrueba()} días sin compromiso`}]:[]), ...tarifas().map(t=>({id:t.id,n:t.n,d:`${fmtEurC(+t.precio)}${+t.meses===1?' al mes':` · ${+t.meses} meses`}`, t}))]; }
 function campoInteres(sel, titulo='¿Con qué quieres empezar?'){ sel=interesOk(sel);
+  const T=tarifas(), base=T.find(x=>+x.meses===1)?.precio, mejor=T.length>1 ? T.reduce((m,x)=>(x.precio/x.meses < m.precio/m.meses ? x : m), T[0]) : null;
+  const tick='<i class="tick" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i>';
+  const tarjeta=o=>{ if(!o.t) return `<b>${esc(o.n)}</b><small>${esc(o.d)}</small>${tick}`;
+    const x=o.t, m=+x.meses, mes=x.precio/m, ahorro=base?base*m-x.precio:0;
+    return `${x===mejor?'<span class="badge">Mejor precio</span>':''}<span class="eyebrow">${esc(x.n)}</span><b class="num">${fmtEurC(+x.precio)}</b><span class="per">${m===1?'al mes':`${m} meses · <span style="white-space:nowrap">${fmtEurC(mes)}/mes</span>`}</span>${ahorro>0.5?`<em>Ahorras ${fmtEurC(ahorro)}</em>`:''}${tick}`; };
   return `<div class="field interes"><label>${titulo}</label><span class="hint">Se paga en el centro, en efectivo o por Bizum, y no se devuelve una vez pagado. Esto solo nos dice qué te interesa y lo puedes cambiar más tarde.</span>
-    <div class="choices">${opcionesInteres().map(o=>`<div class="choice"><input type="radio" name="interes" id="in_${esc(o.id)}" value="${esc(o.id)}" ${o.id===sel?'checked':''}><label for="in_${esc(o.id)}"><b>${esc(o.n)}</b><small>${esc(o.d)}</small></label></div>`).join('')}</div></div>`;
+    <div class="choices">${opcionesInteres().map(o=>`<div class="choice${o.t?'':' prueba-op'}"><input type="radio" name="interes" id="in_${esc(o.id)}" value="${esc(o.id)}" ${o.id===sel?'checked':''}><label for="in_${esc(o.id)}">${tarjeta(o)}</label></div>`).join('')}</div></div>`;
 }
 const leerInteres=()=>document.querySelector('input[name="interes"]:checked')?.value||interesDef();
 function nombreInteres(id){ if(!id) return ''; if(id==='prueba') return 'Prueba gratis'; const t=tarifas().find(x=>x.id===id); return t?`${t.n} (${fmtEurC(+t.precio)})`:''; }
