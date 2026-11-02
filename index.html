@@ -2466,7 +2466,7 @@ function textoBizum(){ const n=S.centro?.bizum; return n ? `Haz el Bizum al <b s
 document.addEventListener('submit', async e=>{
   if(e.target.id!=='fRenovar') return; e.preventDefault();
   const btn=e.target.querySelector('button.primary'); const tipo=leerInteres(); const metodo=document.querySelector('input[name="metodo"]:checked')?.value||'bizum';
-  btn.disabled=true; if(await guardarCli({renovacion:{tipo, metodo, fecha:new Date().toISOString()}, interes:tipo})) toast('Aviso enviado al centro'); btn.disabled=false;
+  btn.disabled=true; if(await guardarCli({renovacion:{tipo, metodo, fecha:new Date().toISOString()}, interes:tipo})){ toast('Aviso enviado al centro'); llamarFuncion({tipo:'renovacion'}); } btn.disabled=false;
 });
 document.addEventListener('click', async e=>{
   const b=e.target.closest('button'); if(!b) return;
