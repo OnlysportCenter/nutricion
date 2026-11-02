@@ -509,6 +509,7 @@ const ING = {
   tortitas:{n:'Tortitas de maíz o de arroz',s:'cereal',k:387,p:8,c:81,f:3,pk:130,pr:1.00,pd:'paquete 130 g'},
   leche:{n:'Leche semidesnatada',s:'lacteo',k:46,p:3.3,c:4.8,f:1.6,a:['lactosa'],d:'lacteo',u:'ml',sl:'Leche semidesnatada sin lactosa',pk:1000,pr:0.83,pd:'brik 1 L'},
   yogur:{n:'Yogur natural desnatado',s:'lacteo',k:41,p:4.3,c:5.8,f:0.1,a:['lactosa'],d:'lacteo',u:'ud',ug:125,un:['yogur','yogures'],sl:'Yogur natural sin lactosa',pk:750,pr:1.20,pd:'pack de 6'},
+  yogur_prot:{n:'Yogur natural alto en proteínas',s:'lacteo',k:51,p:10,c:3.3,f:0.3,a:['lactosa'],d:'lacteo',u:'ud',ug:120,un:['yogur de proteínas','yogures de proteínas'],sl:'Yogur alto en proteínas sin lactosa',pk:480,pr:1.80,pd:'pack de 4'},
   queso_batido:{n:'Queso fresco batido 0%',s:'lacteo',k:46,p:8,c:3.5,f:0.2,a:['lactosa'],d:'lacteo',sl:'Queso fresco batido sin lactosa',pk:500,pr:1.30,pd:'tarrina 500 g'},
   queso_fresco:{n:'Queso fresco de Burgos light',s:'lacteo',k:98,p:11,c:3.5,f:4,a:['lactosa'],d:'lacteo',sl:'Queso fresco sin lactosa',pk:250,pr:1.55,pd:'pack 250 g'},
   queso_lonchas:{n:'Queso en lonchas light',s:'lacteo',k:270,p:28,c:1,f:17,a:['lactosa'],d:'lacteo',sl:'Queso en lonchas sin lactosa',pk:200,pr:1.80,pd:'paquete 200 g'},
@@ -673,6 +674,11 @@ const REC = [
  ['m15','merienda','Yogures con proteína y avena',[['yogur',250],['whey',20],['avena',20]],'Mezcla la proteína con los yogures hasta que no queden grumos y añade la avena.',['canela']],
  ['m16','merienda','Tortilla de claras con tostada',[['claras',150],['pan',40],['tomate',50]],'Cuaja las claras en la sartén y sirve sobre el pan con tomate.',['sal','orégano']],
  ['m13','merienda','Pera con queso fresco',[['pera',150],['queso_fresco',60]],'Pera troceada con el queso en dados.',[]],
+ ['m17','merienda','Yogur de proteínas con nueces y miel',[['yogur_prot',240],['nueces',15],['miel',10]],'Los yogures con las nueces troceadas y un hilo de miel. Vale también el griego ligero.',[]],
+ ['m18','merienda','Yogur de proteínas con kiwi y almendras',[['yogur_prot',240],['kiwi',100],['almendras',15]],'Kiwi en dados sobre el yogur y las almendras por encima.',[]],
+ ['m19','merienda','Pieza de fruta con yogur de proteínas y nueces',[['manzana',150],['yogur_prot',120],['nueces',10]],'Una pieza de fruta de temporada (manzana, pera, mandarina…), un yogur de proteínas y unas nueces. Fácil de llevar.',[]],
+ ['m20','merienda','Queso fresco con nueces y miel',[['queso_fresco',100],['nueces',15],['miel',10]],'El queso fresco en dados con las nueces y un hilo de miel.',[]],
+ ['m21','merienda','Naranja y un puñado de almendras',[['naranja',200],['almendras',20]],'Pieza de fruta y frutos secos. Para tomar en cualquier sitio.',[]],
 
  // ---------- CENAS ----------
  ['n01','cena','Tortilla francesa con ensalada',[['huevo',120],['ensalada',80],['tomate',100],['pan',40],['aceite',10]],'Tortilla de dos huevos y ensalada de lechuga y tomate.',['sal','vinagre']],
@@ -876,7 +882,7 @@ function generarPlan(cli, inicio, semilla, semanas=2){
       for(let j=0;j<Math.min(3,l.length);j++){
         const k=(pos[t]+j)%l.length, r=RECMAP[l[k]];
         const rep = t==='cena' && dia.comida && l.length>2 && prin(l[k])===prin(dia.comida);
-        const dv=densProt(r)-densObj, s=(dv<0?2*dv:-0.5*dv) - (rep?1:0) - j*0.004;
+        const dv=densProt(r)-densObj, s=(dv<0?(t==='merienda'?0.6:2)*dv:-0.5*dv) - (rep?1:0) - j*0.004;
         if(s>mejorS){ mejorS=s; mejor=k; }
       }
       [l[k0],l[mejor]]=[l[mejor],l[k0]];
