@@ -318,7 +318,20 @@ details[open] summary{margin-bottom:10px}
 .cli-body .head h3,.cli-body .head .pill{display:none}
 @media (max-width:440px){.cli-row .pill{max-width:110px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
 .interes .choices{grid-template-columns:repeat(2,minmax(0,1fr))}
-.interes .choice.prueba-op{grid-column:1/-1}
+.interes .choice.prueba-op,.interes .choice.oferta-op{grid-column:1/-1}
+.oferta-card{display:flex;flex-direction:column;gap:4px;padding:16px;border-radius:14px;background:var(--accent);color:var(--accent-ink);position:relative}
+.interes .choice.oferta-op label{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.interes .choice.oferta-op input:checked + label{background:var(--accent);box-shadow:0 0 0 3px var(--good)}
+.interes .choice.oferta-op label .tick{background:transparent;border-color:currentColor;opacity:.7}
+.interes .choice.oferta-op input:checked + label .tick{background:var(--good);border-color:var(--good);color:#fff;opacity:1}
+.of-badge{align-self:flex-start;font-size:.68rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:999px;background:var(--good);color:#fff}
+.of-precio{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.of-precio b{font-family:var(--f-display);font-size:2rem;font-weight:800;line-height:1.05}
+.of-precio s{opacity:.6;font-size:1rem}
+.of-precio span{font-size:.9rem;opacity:.85}
+.of-plazas{display:flex;flex-direction:column;gap:5px;margin-top:6px;font-size:.85rem;font-weight:700}
+.of-barra{height:7px;border-radius:4px;background:color-mix(in srgb, currentColor 22%, transparent);overflow:hidden}
+.of-barra i{display:block;height:100%;background:var(--good);border-radius:4px}
 .interes .choice label{padding:14px 14px 12px;gap:2px;position:relative;transition:border-color .15s,box-shadow .15s}
 .interes .choice label b.num{font-family:var(--f-display);font-size:1.6rem;font-weight:700;line-height:1.1}
 .interes .choice label .per{font-size:.8rem;color:var(--muted)}
@@ -1021,7 +1034,7 @@ async function arrancar(session){
     subs.push(S.db.collection('aprobaciones').onSnapshot(q=>{ S.aprobs=Object.fromEntries(q.docs.map(d=>[d.id,d.data()])); scheduleRender(); }));
     if(!S.pushKey) llamarFuncion({tipo:'init'}).then(r=>{ if(r.publicKey) S.pushKey=r.publicKey; });
   }
-  const h=location.hash.replace('#',''); if(['menu','compra','dulces','progreso','perfil','panel','ajustes','web','asistente'].includes(h)) S.tab=h;
+  const h=location.hash.replace('#',''); if(['menu','compra','dulces','progreso','perfil','panel','ajustes','web','asistente','faq'].includes(h)) S.tab=h;
   render();
   revisarSuscripcion();
 }
@@ -1199,9 +1212,20 @@ function tarjetaBloqueada(plan){ const ap=miAprob();
 /* ---------- Tarifas, prueba gratuita y caducidad ---------- */
 const TARIFAS_DEF=[{id:'mensual',n:'Mensual',meses:1,precio:10},{id:'trimestral',n:'Trimestral',meses:3,precio:25},{id:'semestral',n:'Semestral',meses:6,precio:50},{id:'anual',n:'Anual',meses:12,precio:95}];
 function tarifas(){ const t=S.centro?.tarifas; return Array.isArray(t)&&t.length ? t : TARIFAS_DEF; }
-function nombreTarifa(tipo){ return tipo==='prueba' ? 'Prueba gratuita' : (tarifas().find(t=>t.id===tipo)?.n || S.centro?.tarifasBorradas?.[tipo] || 'Plan'); }
+function nombreTarifa(tipo){ return tipo==='oferta' ? oferta().nombre : tipo==='prueba' ? 'Prueba gratuita' : (tarifas().find(t=>t.id===tipo)?.n || S.centro?.tarifasBorradas?.[tipo] || 'Plan'); }
 function diasPrueba(){ return Math.max(1, +(S.centro?.diasPrueba)||14); }
 function pruebaOn(){ return S.centro?.pruebaActiva===true; }
+/* ---------- Oferta de lanzamiento (con plazas limitadas) ---------- */
+const OFERTA_DEF={activa:false, nombre:'Oferta de lanzamiento', precio:5, meses:1, plazas:20, usadas:0};
+function oferta(){ return {...OFERTA_DEF, ...(S.centro?.oferta||{})}; }
+function ofertaQuedan(){ const o=oferta(); return Math.max(0, (+o.plazas||0)-(+o.usadas||0)); }
+function ofertaOn(){ return oferta().activa===true && ofertaQuedan()>0; }
+function tarifaOferta(){ const o=oferta(); return {id:'oferta', n:o.nombre, meses:Math.max(1,+o.meses||1), precio:+o.precio||0}; }
+function ofertaHtml(){ const o=oferta(), m=Math.max(1,+o.meses||1), q=ofertaQuedan(), tot=Math.max(1,+o.plazas||1);
+  const base=tarifas().find(x=>+x.meses===1)?.precio, normal=base?base*m:null;
+  return `<span class="of-badge">${esc(o.nombre)}</span>
+    <span class="of-precio"><b>${fmtEurC(+o.precio)}</b>${normal&&normal>+o.precio?`<s>${fmtEurC(normal)}</s>`:''}<span>${m===1?'el primer mes':`los primeros ${m} meses`}</span></span>
+    <span class="of-plazas">${q===1?'¡Queda 1 plaza!':`Quedan ${q} de ${tot} plazas`}<span class="of-barra" aria-hidden="true"><i style="width:${Math.round(q/tot*100)}%"></i></span></span>`; }
 function addMonths(iso,n){ const d=parseISO(iso); const day=d.getDate(); d.setDate(1); d.setMonth(d.getMonth()+n); const last=new Date(d.getFullYear(),d.getMonth()+1,0).getDate(); d.setDate(Math.min(day,last)); return toISO(d); }
 const fmtEurC = n => Math.abs(n-Math.round(n))<0.005 ? Math.round(n)+' €' : fmtEur(n);
 // Estado de acceso de un socio a partir de su aprobación
@@ -1214,7 +1238,7 @@ function acceso(ap){
 }
 function bloqueTarifas(){
   const t=tarifas(); const base=t.find(x=>+x.meses===1)?.precio; const mejor=t.reduce((m,x)=>(x.precio/x.meses < m.precio/m.meses ? x : m), t[0]);
-  return `${pruebaOn()?`<div class="trial"><b>Prueba gratis ${diasPrueba()} días</b><span>Pídela en el centro y prueba la app completa, sin compromiso.</span></div>`:''}
+  return `${ofertaOn()?`<div class="oferta-card" style="margin-bottom:10px">${ofertaHtml()}</div>`:''}${pruebaOn()?`<div class="trial"><b>Prueba gratis ${diasPrueba()} días</b><span>Pídela en el centro y prueba la app completa, sin compromiso.</span></div>`:''}
   <div class="tarifas">${t.map(x=>{ const mes=x.precio/x.meses, ahorro=base?base*x.meses-x.precio:0;
     return `<div class="tarifa">${x===mejor&&t.length>1?'<span class="badge">Mejor precio</span>':''}<span class="eyebrow">${esc(x.n)}</span><b class="num">${fmtEurC(+x.precio)}</b><span>${+x.meses===1?'al mes':`${+x.meses} meses · <span style="white-space:nowrap">${fmtEurC(mes)}/mes</span>`}</span>${ahorro>0.5?`<em>Ahorras ${fmtEurC(ahorro)}</em>`:''}</div>`; }).join('')}</div>
   <p class="fine">Precios para socios de ${esc(S.centro?.marca||'Onlysport')}. Se paga en el centro y lo activamos al momento. El pago es por adelantado y no se devuelve una vez hecho, salvo que el centro no pueda prestar el servicio.</p>`;
@@ -1244,20 +1268,20 @@ function bloqueInfo(abrirTarifas=false){
     <details class="acc" data-acc="faqs" ${accAbierto('faqs')}><summary><span class="sum"><span>Preguntas frecuentes</span><small>${faqs().length} respuestas</small><i class="chev-acc" aria-hidden="true"></i></span></summary><div class="acc-body faqs">${bloqueFaqs()}</div></details>
   </div>`;
 }
-function interesDef(){ return pruebaOn() ? 'prueba' : (tarifas().find(t=>+t.meses===1)||tarifas()[0])?.id; }
+function interesDef(){ return ofertaOn() ? 'oferta' : pruebaOn() ? 'prueba' : (tarifas().find(t=>+t.meses===1)||tarifas()[0])?.id; }
 function interesOk(x){ return opcionesInteres().some(o=>o.id===x) ? x : interesDef(); }
-function opcionesInteres(){ return [...(pruebaOn()?[{id:'prueba',n:'Prueba gratis',d:`${diasPrueba()} días sin compromiso`}]:[]), ...tarifas().map(t=>({id:t.id,n:t.n,d:`${fmtEurC(+t.precio)}${+t.meses===1?' al mes':` · ${+t.meses} meses`}`, t}))]; }
+function opcionesInteres(){ return [...(ofertaOn()?[{id:'oferta',n:oferta().nombre,d:'',oferta:true}]:[]), ...(pruebaOn()?[{id:'prueba',n:'Prueba gratis',d:`${diasPrueba()} días sin compromiso`}]:[]), ...tarifas().map(t=>({id:t.id,n:t.n,d:`${fmtEurC(+t.precio)}${+t.meses===1?' al mes':` · ${+t.meses} meses`}`, t}))]; }
 function campoInteres(sel, titulo='¿Con qué quieres empezar?'){ sel=interesOk(sel);
   const T=tarifas(), base=T.find(x=>+x.meses===1)?.precio, mejor=T.length>1 ? T.reduce((m,x)=>(x.precio/x.meses < m.precio/m.meses ? x : m), T[0]) : null;
   const tick='<i class="tick" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i>';
-  const tarjeta=o=>{ if(!o.t) return `<b>${esc(o.n)}</b><small>${esc(o.d)}</small>${tick}`;
+  const tarjeta=o=>{ if(o.oferta) return ofertaHtml()+tick; if(!o.t) return `<b>${esc(o.n)}</b><small>${esc(o.d)}</small>${tick}`;
     const x=o.t, m=+x.meses, mes=x.precio/m, ahorro=base?base*m-x.precio:0;
     return `${x===mejor?'<span class="badge">Mejor precio</span>':''}<span class="eyebrow">${esc(x.n)}</span><b class="num">${fmtEurC(+x.precio)}</b><span class="per">${m===1?'al mes':`${m} meses · <span style="white-space:nowrap">${fmtEurC(mes)}/mes</span>`}</span>${ahorro>0.5?`<em>Ahorras ${fmtEurC(ahorro)}</em>`:''}${tick}`; };
   return `<div class="field interes"><label>${titulo}</label><span class="hint">Se paga en el centro, en efectivo o por Bizum, y no se devuelve una vez pagado. Esto solo nos dice qué te interesa y lo puedes cambiar más tarde.</span>
-    <div class="choices">${opcionesInteres().map(o=>`<div class="choice${o.t?'':' prueba-op'}"><input type="radio" name="interes" id="in_${esc(o.id)}" value="${esc(o.id)}" ${o.id===sel?'checked':''}><label for="in_${esc(o.id)}">${tarjeta(o)}</label></div>`).join('')}</div></div>`;
+    <div class="choices">${opcionesInteres().map(o=>`<div class="choice${o.oferta?' oferta-op':o.t?'':' prueba-op'}"><input type="radio" name="interes" id="in_${esc(o.id)}" value="${esc(o.id)}" ${o.id===sel?'checked':''}><label for="in_${esc(o.id)}">${tarjeta(o)}</label></div>`).join('')}</div></div>`;
 }
 const leerInteres=()=>document.querySelector('input[name="interes"]:checked')?.value||interesDef();
-function nombreInteres(id){ if(!id) return ''; if(id==='prueba') return 'Prueba gratis'; const t=tarifas().find(x=>x.id===id); return t?`${t.n} (${fmtEurC(+t.precio)})`:''; }
+function nombreInteres(id){ if(!id) return ''; if(id==='prueba') return 'Prueba gratis'; if(id==='oferta') return `${oferta().nombre} (${fmtEurC(+oferta().precio)})`; const t=tarifas().find(x=>x.id===id); return t?`${t.n} (${fmtEurC(+t.precio)})`:''; }
 function bloqueBorrarYo(){
   return S.borrarYo?`<div class="confirm"><b>¿Seguro que quieres borrar tu cuenta?</b><p class="prep">Se eliminan tus datos, tus medidas y tu progreso. No se puede deshacer y tendrías que volver a registrarte y esperar a que el centro te dé acceso.</p><div class="row"><button class="btn small primary" id="borrarYoOk" style="background:var(--bad);border-color:var(--bad)">Sí, borrar mi cuenta</button><button class="btn small ghost" id="borrarYoNo">Cancelar</button></div></div>`
       :`<div><button class="btn small ghost danger" id="borrarYo">Borrar mi cuenta y mis datos</button></div>`;
@@ -1279,7 +1303,7 @@ function avisoFinPlan(){
 function clienteActivo(){ return !!(consOk(S.cli) && acceso(miAprob()).ok); }
 function tabsDisponibles(){
   const t=[];
-  if(clienteActivo() && S.cli.perfil && S.cli.plan) t.push(['menu','Mi menú'],['compra','Lista de la compra'],['dulces','Dulces'],['progreso','Progreso'],...(asistenteVisible()?[['asistente','Asistente']]:[]),['perfil','Mis datos']);
+  if(clienteActivo() && S.cli.perfil && S.cli.plan) t.push(['menu','Mi menú'],['compra','Lista de la compra'],['dulces','Dulces'],['progreso','Progreso'],...(asistenteVisible()?[['asistente','Asistente']]:[]),['faq','Preguntas'],['perfil','Mis datos']);
   else t.push(['inicio', S.admin && !S.cli ? 'Mi cuenta' : 'Inicio']);
   if(S.admin) t.push(['panel','Clientes'],['ajustes','Ajustes'],['web','Web']);
   return t;
@@ -1307,7 +1331,7 @@ function render(){
   const pend = S.clientes.filter(c=>!aprobValida(S.aprobs[c.id],c)).length;
   tabs.innerHTML = list.map(([k,l])=>`<button class="tab" data-tab="${k}" aria-current="${S.tab===k}">${l}${k==='panel'&&pend?`<span class="dot">${pend}</span>`:''}</button>`).join('');
   $('#who').textContent = S.cli ? (S.cli.nombre+' '+S.cli.apellidos) : (S.admin?'Administración del centro':'');
-  const v = {inicio:vInicio, menu:vMenu, compra:vCompra, dulces:vDulces, progreso:vProgreso, perfil:vPerfil, panel:vPanel, ajustes:vPanel, web:vWeb, asistente:vAsistente}[S.tab];
+  const v = {inicio:vInicio, menu:vMenu, compra:vCompra, dulces:vDulces, progreso:vProgreso, perfil:vPerfil, panel:vPanel, ajustes:vPanel, web:vWeb, asistente:vAsistente, faq:vFaq}[S.tab];
   main.innerHTML = v();
   after();
 }
@@ -1884,6 +1908,13 @@ async function guardarMedicion(){
 }
 
 /* ---- Mis datos ---- */
+function vFaq(){
+  const ia = typeof asistenteVisible==='function' && asistenteVisible();
+  return `<div class="stack"><span class="eyebrow">Ayuda</span><h1>Preguntas frecuentes</h1><p class="lead">Lo que más nos preguntáis sobre la app.${ia?' Si tu duda es sobre tu menú, pregúntale al asistente.':''}</p></div>
+  <div class="panel"><div class="faqs">${bloqueFaqs('p')}</div></div>
+  <div class="row">${ia?'<button class="btn small" data-tab="asistente">Preguntar al asistente</button>':''}<button class="btn small ghost" data-tab="perfil">Ver tarifas y mi plan</button></div>
+  <p class="fine">¿Otra duda? Pregúntanos en el centro.</p>`;
+}
 function vPerfil(){
   const c=S.cli, pf=c.perfil;
   if(S.editPerfil){
@@ -1924,7 +1955,6 @@ function vPerfil(){
   <div class="panel"><h3>Avisos</h3>${bloqueAvisos()}</div>
   <div class="panel"><h3>Tu plan</h3><p><b>${textoPlan(miAprob())}</b></p>
     <details class="acc" data-acc="tarifasPerfil" ${accAbierto('tarifasPerfil')}><summary><span class="sum"><span>Tarifas</span><i class="chev-acc" aria-hidden="true"></i></span></summary><div class="acc-body">${bloqueTarifas()}</div></details></div>
-  <div class="panel"><h3>Preguntas frecuentes</h3><div class="faqs">${bloqueFaqs('p')}</div></div>
   <div class="panel"><h3>Privacidad y mensajes</h3>
     <p class="prep">Aceptaste la política de privacidad el ${c.privacidad?fmtFecha(c.privacidad.fecha.slice(0,10)):'—'}.</p>
     <label class="consent"><input type="checkbox" id="togCom" ${c.comunicaciones!==false?'checked':''}> <span>Quiero recibir recordatorios y mensajes de ánimo del centro (por correo y notificación).</span></label>
@@ -2005,7 +2035,7 @@ function vPanel(){
         ${a.k==='off'?`<button class="btn small" data-aprobar="${c.id}">Reactivar</button>`:''}
         <button class="btn small ghost danger" data-borrar="${c.id}">Borrar cliente</button>
       </div>
-      ${S.pago===c.id?`<div class="pagobox"><span class="eyebrow">¿Qué ha pagado?</span><div class="filters">${tarifas().map(t=>`<button data-pagar="${c.id}|${esc(t.id)}" aria-pressed="${c.interes===t.id}">${esc(t.n)} · ${fmtEurC(+t.precio)}${c.interes===t.id?' · la que pidió':''}</button>`).join('')}</div>
+      ${S.pago===c.id?`<div class="pagobox"><span class="eyebrow">¿Qué ha pagado?</span><div class="filters">${ofertaOn()||c.interes==='oferta'?`<button data-pagar="${c.id}|oferta" aria-pressed="${c.interes==='oferta'}">${esc(oferta().nombre)} · ${fmtEurC(+oferta().precio)} · quedan ${ofertaQuedan()}${c.interes==='oferta'?' · la que pidió':''}</button>`:''}${tarifas().map(t=>`<button data-pagar="${c.id}|${esc(t.id)}" aria-pressed="${c.interes===t.id}">${esc(t.n)} · ${fmtEurC(+t.precio)}${c.interes===t.id?' · la que pidió':''}</button>`).join('')}</div>
         <p class="fine">${a.k==='activo'&&ap?.hasta?`Se suma a partir del ${fmtFecha(addDays(ap.hasta,1),{day:'numeric',month:'long'})}, cuando acaba su plan actual.`:'Empieza hoy.'}${ultPago?` <button class="btn small ghost" data-deshacerpago="${c.id}">Deshacer el último pago</button>`:''}</p></div>`:''}
       ${ok?`<div class="lab-row" style="flex-wrap:wrap"><label for="per_${c.id}" class="meta">Revisión</label><select class="inp" id="per_${c.id}" data-periodo="${c.id}" style="width:auto;padding:6px 10px">
         <option value="" ${!ap.periodo?'selected':''}>Como el centro (${PERIODOS[periodoCentro()]})</option>
@@ -2097,6 +2127,18 @@ function vPanel(){
       <div class="field" id="tDiasBox" ${pruebaOn()?'':'hidden'}><label for="tDias">Días de prueba gratuita</label><div class="unit"><input class="inp num" id="tDias" inputmode="numeric" value="${diasPrueba()}"><span>días</span></div></div>
       <p class="err" id="tErr"></p><div><button class="btn small primary">Guardar tarifas</button></div>
     </form></div></details>
+  <details class="acc" data-acc="ajOferta" ${accAbierto('ajOferta')}><summary><span class="sum"><span>Oferta de lanzamiento</span><small>${oferta().activa?(ofertaQuedan()?`activa · quedan ${ofertaQuedan()}`:'agotada'):'desactivada'}</small><i class="chev-acc" aria-hidden="true"></i></span></summary><div class="acc-body">
+    <p class="prep">Sale destacada a los socios nuevos al registrarse y en las tarifas, con las plazas que quedan. Cada vez que registras un pago de la oferta se descuenta una plaza (y se devuelve si deshaces ese pago). Al agotarse, desaparece sola.</p>
+    <div class="oferta-card">${ofertaHtml()}</div>
+    <form class="stack" id="fOferta" novalidate>
+      <label class="consent"><input type="checkbox" id="ofActiva" ${oferta().activa?'checked':''}> <span><b>Mostrar la oferta</b></span></label>
+      <div class="fgrid" style="grid-template-columns:1fr 1fr"><div class="field" style="grid-column:1/-1"><label for="ofNombre">Nombre</label><input class="inp" id="ofNombre" value="${esc(oferta().nombre)}"></div>
+        <div class="field"><label for="ofPrecio">Precio</label><div class="unit"><input class="inp num" id="ofPrecio" inputmode="decimal" value="${esc(String(oferta().precio).replace('.',','))}"><span>€</span></div></div>
+        <div class="field"><label for="ofMeses">Duración</label><div class="unit"><input class="inp num" id="ofMeses" inputmode="numeric" value="${esc(oferta().meses)}"><span>meses</span></div></div>
+        <div class="field"><label for="ofPlazas">Plazas en total</label><input class="inp num" id="ofPlazas" inputmode="numeric" value="${esc(oferta().plazas)}"></div>
+        <div class="field"><label for="ofUsadas">Plazas ya ocupadas</label><input class="inp num" id="ofUsadas" inputmode="numeric" value="${esc(oferta().usadas)}"></div></div>
+      <p class="err" id="ofErr"></p><div><button class="btn small primary">Guardar oferta</button></div>
+    </form></div></details>
   <details class="acc" data-acc="ajFaq" ${accAbierto('ajFaq')}><summary><span class="sum"><span>Preguntas frecuentes</span><small>${faqs().length}</small><i class="chev-acc" aria-hidden="true"></i></span></summary><div class="acc-body">
     <p class="prep">Salen en la pantalla de entrada, en la de espera y en Mis datos. Añade, cambia o quita las que quieras.</p>
     <form class="stack" id="fFaqs" novalidate>
@@ -2112,15 +2154,17 @@ function cliPorId(id){ return S.clientes.find(c=>c.id===id); }
 function leerTarifas(){ S.tarEdit=(S.tarEdit||[]).map((x,i)=>({...x, n:$('#tn_'+i)?.value ?? x.n, meses:$('#tm_'+i)?.value ?? x.meses, precio:$('#tp_'+i)?.value ?? x.precio})); }
 function leerFaqs(){ S.faqEdit=(S.faqEdit||[]).map((q,i)=>({q:$('#fq_'+i)?.value ?? q.q, a:$('#fa_'+i)?.value ?? q.a})); }
 async function registrarPago(id, tipo){
-  const c=cliPorId(id), ap=aprobValida(S.aprobs[id],c)||{}, a=acceso(ap), t=tarifas().find(x=>x.id===tipo); if(!t) return;
+  const c=cliPorId(id), ap=aprobValida(S.aprobs[id],c)||{}, a=acceso(ap), t=tipo==='oferta' ? tarifaOferta() : tarifas().find(x=>x.id===tipo); if(!t) return;
   const desde = (a.k==='activo' && ap.hasta) ? addDays(ap.hasta,1) : hoy();
   const hasta = addDays(addMonths(desde, +t.meses), -1);
   const pago={fecha:hoy(), tipo, importe:+t.precio, desde, hasta, prev:{tipo:ap.tipo||null, desde:ap.desde||null, hasta:ap.hasta||null, activo:ap.activo??null}};
-  if(await setAprob(id,{activo:true, tipo, desde: a.k==='activo'&&ap.desde?ap.desde:desde, hasta, pagos:[...(ap.pagos||[]), pago].slice(-30)}, `Pago registrado: ${t.n}, hasta el ${fmtFecha(hasta,{day:'numeric',month:'long',year:'numeric'})}`)) S.pago=null;
+  if(await setAprob(id,{activo:true, tipo, desde: a.k==='activo'&&ap.desde?ap.desde:desde, hasta, pagos:[...(ap.pagos||[]), pago].slice(-30)}, `Pago registrado: ${t.n}, hasta el ${fmtFecha(hasta,{day:'numeric',month:'long',year:'numeric'})}`)){ S.pago=null;
+    if(tipo==='oferta'){ const o=oferta(); await guardarCentro({oferta:{...o, usadas:(+o.usadas||0)+1}}, `Pago registrado. Plazas de la oferta que quedan: ${Math.max(0,ofertaQuedan()-1)}`); } }
 }
 async function deshacerPago(id){
   const c=cliPorId(id), ap=aprobValida(S.aprobs[id],c); const p=(ap?.pagos||[]).slice(-1)[0]; if(!p) return;
-  await setAprob(id,{tipo:p.prev.tipo, desde:p.prev.desde, hasta:p.prev.hasta, activo:p.prev.activo??false, pagos:ap.pagos.slice(0,-1)}, 'Último pago deshecho'); S.pago=null;
+  if(await setAprob(id,{tipo:p.prev.tipo, desde:p.prev.desde, hasta:p.prev.hasta, activo:p.prev.activo??false, pagos:ap.pagos.slice(0,-1)}, 'Último pago deshecho') && p.tipo==='oferta'){ const o=oferta(); await guardarCentro({oferta:{...o, usadas:Math.max(0,(+o.usadas||0)-1)}}, 'Pago deshecho y plaza de la oferta devuelta'); }
+  S.pago=null;
 }
 async function setAprob(id, patch, okMsg){
   const c=cliPorId(id); const prev=aprobValida(S.aprobs[id],c)||{};
@@ -2446,6 +2490,15 @@ document.addEventListener('submit', async e=>{
     if(on && !(dias>=1&&dias<=60)) return errT('No se ha guardado: los días de prueba deben estar entre 1 y 60.');
     const borradas={...(S.centro?.tarifasBorradas||{})}; for(const x of tarifas()) if(!L.some(y=>y.id===x.id)) borradas[x.id]=x.n;
     btn.disabled=true; if(await guardarCentro({tarifas:L, pruebaActiva:on, ...(on?{diasPrueba:dias}:{}), tarifasBorradas:borradas},'Tarifas guardadas')) S.tarEdit=null; btn.disabled=false; render(); return; }
+  if(f.id==='fOferta'){
+    const n=v=>parseFloat(String(v).replace(',','.'));
+    const o={activa:$('#ofActiva').checked, nombre:$('#ofNombre').value.trim()||OFERTA_DEF.nombre, precio:Math.round(n($('#ofPrecio').value)*100)/100, meses:parseInt($('#ofMeses').value,10), plazas:parseInt($('#ofPlazas').value,10), usadas:parseInt($('#ofUsadas').value,10)||0};
+    const err=m=>{ $('#ofErr').textContent=m; toast(m); };
+    if(!(o.precio>=0)) return err('No se ha guardado: revisa el precio.');
+    if(!(o.meses>=1&&o.meses<=12)) return err('No se ha guardado: la duración debe estar entre 1 y 12 meses.');
+    if(!(o.plazas>=1&&o.plazas<=1000)) return err('No se ha guardado: revisa las plazas en total.');
+    if(!(o.usadas>=0&&o.usadas<=o.plazas)) return err('No se ha guardado: las plazas ocupadas no pueden ser más que el total.');
+    btn.disabled=true; await guardarCentro({oferta:o},'Oferta guardada'); btn.disabled=false; render(); return; }
   if(f.id==='fFaqs'){ leerFaqs(); const l=S.faqEdit.map(x=>({q:x.q.trim(),a:x.a.trim()})).filter(x=>x.q&&x.a); btn.disabled=true; if(await guardarCentro({faqs:l},'Preguntas guardadas')) S.faqEdit=null; btn.disabled=false; return; }
   if(f.id==='fPrecios'){
     const precios={...(S.centro?.precios||{})}; let mal=null;
