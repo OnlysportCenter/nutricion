@@ -415,6 +415,38 @@ details[open] summary{margin-bottom:10px}
 .chat-form{position:sticky;bottom:0;display:flex;gap:8px;align-items:flex-end;padding:10px 0 calc(10px + env(safe-area-inset-bottom,0px));background:var(--bg)}
 .chat-form textarea{flex:1;resize:none;min-height:48px}
 .linkbtn{background:none;border:0;padding:0;font:inherit;color:inherit;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+#justifRoot{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.55);overflow:auto;padding:16px;display:flex;justify-content:center;align-items:flex-start}
+#justifRoot[hidden]{display:none}
+.justif-acc{position:sticky;top:0;display:flex;gap:8px;justify-content:flex-end;margin-bottom:10px}
+.justif-wrap{width:100%;max-width:640px}
+.justif{background:#fff;color:#111;border-radius:14px;padding:32px 30px;font:14px/1.5 var(--f-body,system-ui,sans-serif)}
+.justif h1{font-family:var(--f-display);font-size:1.3rem;margin:0}
+.justif .jcab{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;border-bottom:2px solid #111;padding-bottom:14px;margin-bottom:18px}
+.justif .jcab .jmark{width:40px;height:40px;border-radius:10px;background:#111;color:#fff;display:grid;place-items:center}
+.justif .jcab .jmark svg{height:26px;width:auto}
+.justif .jnum{text-align:right;font-size:.85rem;color:#444}
+.justif .jnum b{display:block;font-size:.95rem;color:#111;letter-spacing:.02em;white-space:nowrap}
+.justif .jgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px}
+.justif .jlab{font-size:.7rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#666;margin-bottom:3px}
+.justif table{width:100%;border-collapse:collapse;margin:6px 0 14px;table-layout:fixed}
+.justif col.c1{width:42%}.justif col.c2{width:36%}.justif col.c3{width:22%}
+.justif td,.justif th{white-space:normal !important;word-wrap:break-word;overflow-wrap:anywhere}
+.justif td.imp,.justif th.imp{white-space:nowrap !important}
+.justif th,.justif td{text-align:left;padding:9px 6px;border-bottom:1px solid #ddd;vertical-align:top}
+.justif th{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:#666;font-weight:700}
+.justif td.imp,.justif th.imp{text-align:right;white-space:nowrap}
+.justif .jtotal{display:flex;justify-content:flex-end;gap:16px;font-size:1.15rem;font-weight:800;font-family:var(--f-display)}
+.justif .jpie{margin-top:22px;padding-top:12px;border-top:1px solid #ddd;font-size:.78rem;color:#555}
+@media (max-width:520px){.justif{padding:22px 18px;font-size:13px}.justif .jgrid{grid-template-columns:1fr}.justif .jcab{flex-wrap:wrap}.justif .jnum{text-align:left}.justif th,.justif td{padding:8px 4px}}
+.pagos-lista{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.pagos-lista .pg{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border-radius:10px;background:var(--sunk);font-size:.88rem}
+@media print{
+  body > *:not(#justifRoot){display:none !important}
+  #justifRoot{position:static;background:none;padding:0;overflow:visible;display:block}
+  .justif-acc{display:none !important}
+  .justif{border-radius:0;padding:0}
+  @page{margin:18mm}
+}
 .faqedit{display:flex;flex-direction:column;gap:6px;padding:12px;border-radius:12px;background:var(--sunk)}
 .consent{display:flex;gap:10px;align-items:flex-start;font-size:.9rem;cursor:pointer}
 .consent input{margin-top:3px;width:18px;height:18px;flex:0 0 auto;accent-color:var(--accent)}
@@ -1953,7 +1985,7 @@ function vPerfil(){
   </div><div class="row"><button class="btn" id="editarPerfil">Cambiar preferencias</button><button class="btn ghost" id="otroMenu">Generar otro menú con los mismos datos</button></div></div>
   <div class="panel"><h3>Apariencia</h3>${bloqueTema()}</div>
   <div class="panel"><h3>Avisos</h3>${bloqueAvisos()}</div>
-  <div class="panel"><h3>Tu plan</h3><p><b>${textoPlan(miAprob())}</b></p>
+  <div class="panel"><h3>Tu plan</h3><p><b>${textoPlan(miAprob())}</b></p>${(miAprob()?.pagos||[]).length?`<span class="eyebrow" style="margin-top:6px">Tus pagos</span>${listaPagos(S.uid, miAprob())}`:''}
     <details class="acc" data-acc="tarifasPerfil" ${accAbierto('tarifasPerfil')}><summary><span class="sum"><span>Tarifas</span><i class="chev-acc" aria-hidden="true"></i></span></summary><div class="acc-body">${bloqueTarifas()}</div></details></div>
   <div class="panel"><h3>Privacidad y mensajes</h3>
     <p class="prep">Aceptaste la política de privacidad el ${c.privacidad?fmtFecha(c.privacidad.fecha.slice(0,10)):'—'}.</p>
@@ -2026,7 +2058,7 @@ function vPanel(){
     const pf=c.perfil;
     const ficha=`<article class="client ficha-cli"><div class="head"><div class="stack" style="gap:2px;min-width:0"><h3>${esc(c.nombre)} ${esc(c.apellidos)}${c.id===S.uid?' <span class="d neu" style="display:inline">(tú)</span>':''}</h3><span class="meta">${esc(c.email)} · alta ${c.creado?fmtFecha(c.creado.slice(0,10),{day:'numeric',month:'short',year:'numeric'}):'—'}${c.privacidad?'':' · <b style="color:var(--saffron)">falta aceptar privacidad</b>'}${c.comunicaciones===false?' · no quiere mensajes de ánimo':''}</span></div><span class="pill ${est[0]}">${est[1]}</span></div>
       <p class="meta">${resumen}</p>
-      ${ultPago?`<p class="meta">Último pago: <b>${fmtEurC(+ultPago.importe)}</b> (${esc(nombreTarifa(ultPago.tipo))}) el ${fmtFecha(ultPago.fecha,{day:'numeric',month:'short'})} · cubre hasta el ${fmtFecha(ultPago.hasta,{day:'numeric',month:'short',year:'numeric'})}</p>`:''}
+      ${ultPago?`<p class="meta">Último pago: <b>${fmtEurC(+ultPago.importe)}</b> (${esc(nombreTarifa(ultPago.tipo))}) el ${fmtFecha(ultPago.fecha,{day:'numeric',month:'short'})} · cubre hasta el ${fmtFecha(ultPago.hasta,{day:'numeric',month:'short',year:'numeric'})} <button class="btn small ghost" data-justif="${c.id}|${ap.pagos.length-1}">Justificante</button></p>${ap.pagos.length>1?`<details class="acc" data-acc="pagos_${c.id}" ${accAbierto('pagos_'+c.id)}><summary><span class="sum"><span>Todos sus pagos</span><small>${ap.pagos.length}</small><i class="chev-acc" aria-hidden="true"></i></span></summary><div class="acc-body">${listaPagos(c.id, ap)}</div></details>`:''}`:''}
       <div class="row">
         ${c.interes&&!ap?.hasta&&a.k==='pend'?`<span class="meta" style="flex-basis:100%">Ha pedido: <b>${esc(nombreInteres(c.interes))}</b></span>`:''}
         ${a.k==='pend'&&pruebaOn()&&!ap?.pruebaUsada?`<button class="btn small ${c.interes==='prueba'?'primary':''}" data-prueba="${c.id}">Activar prueba gratis (${diasPrueba()} días)</button>`:''}
@@ -2358,6 +2390,43 @@ document.addEventListener('change', e=>{ if(e.target.id==='togIA') guardarCentro
 document.addEventListener('input', e=>{ if(e.target.id==='chatTxt') S.chatBorr=e.target.value; });
 document.addEventListener('keydown', e=>{ if(e.target.id==='chatTxt' && e.key==='Enter' && !e.shiftKey && !e.isComposing){ e.preventDefault(); enviarPregunta(e.target.value); } });
 document.addEventListener('submit', e=>{ if(e.target.id==='fChat'){ e.preventDefault(); enviarPregunta($('#chatTxt').value); } });
+
+/* ---------- Justificante de pago (no es una factura) ---------- */
+function numJustif(cid,idx,p){ return `OS-${String(p.fecha).replace(/-/g,'')}-${String(cid).replace(/[^a-z0-9]/gi,'').slice(0,4).toUpperCase()}${idx+1}`; }
+function justificanteHtml(cli,cid,p,idx){
+  const ce=S.centro||{}, nom=esc(ce.nombre||'Onlysport Center'), m=Math.max(1,Math.round(diffDays(p.desde,addDays(p.hasta,1))/30));
+  return `<article class="justif" aria-label="Justificante de pago">
+    <div class="jcab"><div style="display:flex;gap:12px;align-items:center"><span class="jmark" aria-hidden="true">${LOGO_MARK}</span><div><h1>Justificante de pago</h1><div style="color:#555;font-size:.85rem">${esc(S.centro?.marca||MARCA_DEF)} · App de menús</div></div></div>
+      <div class="jnum">N.º<b>${numJustif(cid,idx,p)}</b>${fmtFecha(p.fecha,{day:'numeric',month:'long',year:'numeric'})}</div></div>
+    <div class="jgrid">
+      <div><div class="jlab">Centro</div><b>${nom}</b>${ce.nif?`<br>NIF ${esc(ce.nif)}`:''}${ce.direccion?`<br>${esc(ce.direccion)}`:''}${ce.email?`<br>${esc(ce.email)}`:''}</div>
+      <div><div class="jlab">Socio</div><b>${esc(cli.nombre||'')} ${esc(cli.apellidos||'')}</b>${cli.email?`<br>${esc(cli.email)}`:''}</div>
+    </div>
+    <table><colgroup><col class="c1"><col class="c2"><col class="c3"></colgroup><thead><tr><th>Concepto</th><th>Periodo</th><th class="imp">Importe</th></tr></thead>
+      <tbody><tr><td>App de menús · ${esc(nombreTarifa(p.tipo))}</td><td>Del ${fmtFecha(p.desde,{day:'numeric',month:'short',year:'numeric'})} al ${fmtFecha(p.hasta,{day:'numeric',month:'short',year:'numeric'})}</td><td class="imp">${fmtEur(+p.importe)}</td></tr></tbody></table>
+    <div class="jtotal"><span>Total pagado</span><span>${fmtEur(+p.importe)}</span></div>
+    <p style="text-align:right;color:#555;font-size:.8rem;margin:4px 0 0">Impuestos incluidos · Pagado en el centro el ${fmtFecha(p.fecha,{day:'numeric',month:'long',year:'numeric'})}</p>
+    <div class="jpie">Este documento justifica el pago y no es una factura. Si necesitas una factura, pídela en el centro.${m?'':''}</div>
+  </article>`;
+}
+function abrirJustificante(cid,idx){
+  const esYo = cid===S.uid; const cli = esYo ? S.cli : cliPorId(cid);
+  const ap = esYo ? miAprob() : aprobValida(S.aprobs[cid],cli); const p=(ap?.pagos||[])[idx]; if(!cli||!p){ toast('No se encuentra ese pago.'); return; }
+  let root=document.getElementById('justifRoot'); if(!root){ root=document.createElement('div'); root.id='justifRoot'; document.body.appendChild(root); }
+  root.innerHTML=`<div class="justif-wrap"><div class="justif-acc"><button class="btn small primary" id="justifImprimir">Descargar PDF o imprimir</button><button class="btn small" id="justifCerrar">Cerrar</button></div>${justificanteHtml(cli,cid,p,idx)}</div>`;
+  root.hidden=false; document.title='Justificante '+numJustif(cid,idx,p);
+}
+function cerrarJustificante(){ const r=document.getElementById('justifRoot'); if(r){ r.hidden=true; r.innerHTML=''; } document.title=TITULO_APP; }
+const TITULO_APP=document.title;
+function listaPagos(cid, ap){ const L=(ap?.pagos||[]).map((p,i)=>[p,i]).reverse(); if(!L.length) return '';
+  return `<div class="pagos-lista">${L.map(([p,i])=>`<div class="pg"><span>${fmtFecha(p.fecha,{day:'numeric',month:'short',year:'numeric'})} · ${esc(nombreTarifa(p.tipo))} · <b>${fmtEurC(+p.importe)}</b></span><button class="btn small ghost" data-justif="${esc(cid)}|${i}">Justificante</button></div>`).join('')}</div>`; }
+document.addEventListener('click', e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  if(b.dataset.justif){ const [cid,i]=b.dataset.justif.split('|'); abrirJustificante(cid,+i); return; }
+  if(b.id==='justifImprimir'){ window.print(); return; }
+  if(b.id==='justifCerrar'){ cerrarJustificante(); return; }
+});
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') cerrarJustificante(); });
 async function guardarCentro(patch, okMsg){
   try{ await S.db.doc('config/centro').set({...(S.centro||{}), ...patch}); S.centro={...(S.centro||{}), ...patch}; toast(okMsg); return true; }
   catch(e){ console.error('guardarCentro', e); toast('No se ha podido guardar: '+(e?.message||'error de conexión')+'. Prueba a salir y volver a entrar.'); return false; }
