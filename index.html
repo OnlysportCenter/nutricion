@@ -1909,6 +1909,11 @@ function vProgreso(){
     <p class="err" id="mErr"></p><div class="row"><button class="btn primary">Guardar y crear mi nuevo menú</button><button type="button" class="btn ghost" id="mCancel">Cancelar</button></div></form>` : '';
   const hero=heroProgreso(c), minis=minisProgreso(c);
   const gImc=gauge('Índice de masa corporal',imc,fmtN(imc),[18.5,25,30],15,40,[['neu','Bajo peso',0],['good','Normal',1],['warn','Sobrepeso',2],['bad','Obesidad',3]],'<span>15</span><span>18,5</span><span>25</span><span>30</span><span>40</span>','Orientativo: no distingue músculo de grasa. Con mucha masa muscular puede salir alto sin que sobre grasa.');
+  // Rango de peso saludable para su altura (IMC 18,5-24,9) y cintura / altura (< 0,5): informativos, no un peso objetivo
+  const h2=(c.perfil.altura/100)**2, pMin=18.5*h2, pMax=24.9*h2, r5=x=>Math.round(x);
+  const gPeso=gauge('Peso saludable para tu altura',u.peso,`${fmtN(u.peso)} kg`,[pMin,pMax],16*h2,34*h2,[['neu','Por debajo',0],['good','En rango',1],['warn','Por encima',2]],`<span>${r5(16*h2)}</span><span>${r5(pMin)}</span><span>${r5(pMax)}</span><span>${r5(34*h2)} kg</span>`,`Para ${fmtN(c.perfil.altura)} cm, entre <span style="font-weight:700;color:var(--ink)">${r5(pMin)} y ${r5(pMax)} kg</span>. Orientativo: no distingue músculo de grasa; si entrenas fuerza, fíjate más en la cintura.`);
+  const wh=u.cintura/c.perfil.altura;
+  const gCa=gauge('Cintura / altura',wh,fmtN(wh,2),[0.5,0.6],0.35,0.75,[['good','Saludable',1],['warn','Riesgo moderado',2],['bad','Riesgo alto',3]],'<span>0,35</span><span>0,50</span><span>0,60</span><span>0,75</span>',`Lo saludable es que la cintura mida menos de la mitad de tu altura: <span style="font-weight:700;color:var(--ink)">menos de ${fmtN(c.perfil.altura/2)} cm</span> (ahora ${fmtN(u.cintura)} cm). Refleja la grasa abdominal y no penaliza el músculo.`);
   const lim=H?[0.90,1.0]:[0.80,0.86];
   const gIcc=gauge('Índice cintura / cadera',icc,fmtN(icc,2),lim,H?0.7:0.65,H?1.15:1.05,[['good','Riesgo bajo',1],['warn','Riesgo moderado',2],['bad','Riesgo alto',3]],H?'<span>0,70</span><span>0,90</span><span>1,00</span><span>1,15</span>':'<span>0,65</span><span>0,80</span><span>0,86</span><span>1,05</span>','Indica cómo se reparte la grasa. Es de las medidas que mejor reflejan el progreso cuando entrenas fuerza.');
   return `<div class="stack"><span class="eyebrow">Progreso · ${OBJETIVOS[o].n}</span><h1>Tu evolución</h1></div>
@@ -1920,7 +1925,7 @@ function vProgreso(){
   <div class="minis">${minis}</div>
   ${ultRev?`<div class="notice ok"><b>Ajuste del ${fmtFecha(ultRev.fecha,{day:'numeric',month:'long'})}</b><p>${esc(ultRev.nota)} ${ultRev.delta?`(${ultRev.delta>0?'+':''}${ultRev.delta} kcal al día)`:''}</p></div>`:''}
   <h2>Indicadores de salud</h2>
-  <div class="gauges">${gImc}${gIcc}</div>
+  <div class="gauges">${gPeso}${gCa}${gImc}${gIcc}</div>
   <h2>Tabla comparativa</h2>${tablaMediciones(c)}
   <p class="fine">Debajo de cada valor, el cambio respecto a la medición anterior: verde si va en la dirección de tu objetivo, rojo si va en contra.</p>
   <div class="panel"><h3>Tus números actuales</h3><div class="fgrid nums">
