@@ -581,6 +581,8 @@ const ING = {
   calabaza:{n:'Calabaza',s:'fruta',k:26,p:1,c:6.5,f:0.1,kg:true,pr:1.60},
   fideos:{n:'Fideos',s:'cereal',k:359,p:12,c:72,f:1.5,a:['gluten'],sg:'Fideos sin gluten',pk:500,pr:0.85,pd:'paquete 500 g'},
   mayonesa:{n:'Mayonesa ligera',s:'despensa',k:290,p:0.8,c:7,f:29,a:['huevo'],d:'huevo',pk:430,pr:1.80,pd:'bote 430 ml',prop:true},
+  canonigos:{n:'Canónigos',s:'fruta',k:21,p:2,c:3.6,f:0.4,pk:125,pr:1.20,pd:'bolsa 125 g'},
+  salsa_soja:{n:'Salsa de soja',s:'despensa',k:53,p:8,c:4.9,f:0.6,a:['soja','gluten'],sg:'Salsa de soja sin gluten (tamari)',u:'ml',pk:250,pr:1.30,pd:'botella 250 ml',prop:true},
 };
 
 // Recetas: [id, tipo, nombre, [[ingrediente, gramos]...], preparación, cosas de casa]
@@ -648,6 +650,11 @@ const REC = [
  ['c36','comida','Patatas guisadas con carne',[['ternera',140],['patata',220],['zanahoria',60],['guisantes',40],['cebolla',50],['tomate_tri',40],['aceite',8]],'Dora la carne en tacos, añade cebolla, ajo y tomate, y agua: 40 min (15 en olla exprés). Añade patata, zanahoria y guisantes y cuece 20 min más.',['ajo','laurel','pimentón','sal']],
  ['c37','comida','Salmorejo cordobés y pechuga de pollo a la plancha',[['pollo',130],['tomate',250],['pan',50],['aceite',12],['huevo',30],['serrano',20]],'Tritura el tomate con el pan, el ajo y la sal, y añade el aceite poco a poco. Sirve frío con huevo duro y jamón picados. De segundo, el pollo a la plancha.',['ajo','sal']],
  ['c38','comida','Potaje de garbanzos con bacalao y espinacas',[['garbanzos',220],['bacalao',100],['espinacas',100],['cebolla',40],['tomate_tri',40],['aceite',8]],'Sofríe cebolla y ajo, añade el tomate y el pimentón, agua y los garbanzos. A los 5 min, las espinacas y el bacalao en trozos 6-8 min.',['ajo','pimentón','comino','sal']],
+ // Platos rápidos de diario
+ ['c39','comida','Fideos guisados con pollo',[['pollo',130],['fideos',80],['cebolla',50],['pimiento',50],['tomate_tri',60],['aceite',8]],'Sofríe cebolla y pimiento, añade el pollo en tacos y el tomate. Echa agua o caldo y, cuando hierva, los fideos 8-10 min. Listo en 20 min.',['ajo','pimentón','caldo de pollo','sal']],
+ ['c40','comida','Wok de verduras con ternera y arroz',[['ternera',130],['arroz',70],['pimiento',80],['calabacin',80],['zanahoria',50],['cebolla',40],['salsa_soja',15],['aceite',8]],'Saltea la ternera en tiras a fuego fuerte 2 min y sácala. Saltea las verduras en tiras 5 min, vuelve a meter la carne con la soja y sirve con el arroz cocido.',['ajo']],
+ ['c41','comida','Wok de fideos con langostinos y verduras',[['langostinos',130],['fideos',75],['pimiento',80],['zanahoria',50],['calabacin',80],['salsa_soja',15],['aceite',8]],'Cuece los fideos. Saltea las verduras en tiras a fuego fuerte 4 min, añade los langostinos 2 min y luego los fideos y la soja.',['ajo','jengibre']],
+ ['c42','comida','Ensalada de canónigos con pollo, manzana y nueces',[['pollo',140],['canonigos',80],['manzana',100],['tomate',100],['nueces',15],['pan',60],['aceite',8]],'Pollo a la plancha en tiras sobre los canónigos con la manzana en dados, el tomate y las nueces. Aliña y acompaña con pan.',['vinagre de Módena','sal']],
 
  // ---------- MERIENDAS ----------
  ['m01','merienda','Yogures con fresas',[['yogur',250],['fresas',100]],'Mezcla y listo.',[]],
@@ -702,6 +709,11 @@ const REC = [
  ['n31','cena','Crema de calabaza con huevo y jamón',[['calabaza',250],['huevo',60],['serrano',30],['puerro',50],['patata',60],['aceite',8]],'Cuece calabaza, puerro y patata 20 min y tritura. Por encima, huevo duro y jamón picados.',['sal','pimienta']],
  ['n32','cena','Ensaladilla de atún',[['atun',80],['patata',200],['huevo',60],['zanahoria',40],['guisantes',40],['mayonesa',25]],'Cuece la patata, la zanahoria y los guisantes y deja enfriar. Mezcla con el atún, el huevo duro picado y la mayonesa.',['sal']],
  ['n33','cena','Serranito casero (lomo, jamón y pimiento)',[['lomo',100],['pan',80],['serrano',20],['pimiento',80],['tomate',40],['aceite',6]],'Haz el lomo y el pimiento a la plancha. Monta el bocadillo con el tomate en rodajas y el jamón.',['ajo','sal']],
+ // Platos rápidos de diario
+ ['n34','cena','Tomate picado con atún y huevo duro',[['atun',90],['tomate',300],['huevo',60],['cebolla',30],['pan',40],['aceite',10]],'Pica el tomate y la cebolla, pon encima el atún y el huevo duro en trozos y aliña con aceite, sal y un poco de comino o vinagre.',['comino','vinagre','sal']],
+ ['n35','cena','Ensalada de canónigos con atún, huevo y aguacate',[['atun',80],['canonigos',80],['huevo',60],['aguacate',50],['tomate',100],['pan',30],['aceite',6]],'Monta los canónigos con el tomate, el aguacate, el atún y el huevo duro en cuartos. Aliña al momento.',['vinagre','sal']],
+ ['n36','cena','Wok de verduras con pollo',[['pollo',140],['pimiento',100],['calabacin',100],['champinones',80],['cebolla',40],['zanahoria',40],['salsa_soja',15],['aceite',8]],'Saltea el pollo en tiras a fuego fuerte y sácalo. Saltea las verduras 5 min, vuelve a meter el pollo con la soja. Listo en 15 min.',['ajo']],
+ ['n37','cena','Ensalada de canónigos con queso fresco, nueces y huevo',[['huevo',120],['canonigos',80],['queso_fresco',60],['tomate',100],['nueces',15],['pan',30],['aceite',5]],'Canónigos con el tomate, el queso fresco en dados, las nueces y dos huevos duros. Aliña al momento.',['vinagre de Módena','sal']],
 ].map(([id,t,n,i,p,x])=>{
   const r={id,t,n,i,p,x}; let k=0,P=0,C=0,F=0;
   for(const [key,g] of i){const z=ING[key]; k+=z.k*g/100; P+=z.p*g/100; C+=z.c*g/100; F+=z.f*g/100;}
