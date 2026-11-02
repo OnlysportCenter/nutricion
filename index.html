@@ -163,6 +163,10 @@ main .wrap{padding-block:24px 64px;display:flex;flex-direction:column;gap:24px}
 .filters button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
 .tips{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:.92rem}
 .day.libre small{color:var(--saffron);font-weight:600}
+.day.bloq{opacity:.55;border-style:dashed}
+.day.bloq small{display:flex;align-items:center;gap:3px}
+.meal.bloqueado{border-style:dashed;text-align:left}
+.meal.bloqueado h3{display:flex;align-items:center;gap:8px}
 .day.libre[aria-current="true"] small{color:var(--accent-ink)}
 .tabs{mask-image:linear-gradient(90deg,#000 85%,transparent);-webkit-mask-image:linear-gradient(90deg,#000 85%,transparent)}
 @media (min-width:700px){.tabs{mask-image:none;-webkit-mask-image:none}}
@@ -847,6 +851,7 @@ function compraDe(key,g){
 function listaCompra(plan, semana, pf){
   const acc={}; const extras=new Set();
   for(let d=semana*7; d<semana*7+7; d++){
+    if(diaBloqueado(plan,d)) continue;
     const FD=factoresDia(plan,d,pf);
     for(const [t,r] of recetasDelDia(plan,d,pf)){
       const f=FD[t];
@@ -1172,6 +1177,14 @@ function bloqueTema(){ const t=temaActual(); return `<div class="filters" role="
 /* ===================== RENDER ===================== */
 function aprobValida(ap, c){ return ap && c && (!ap.cliCreado || ap.cliCreado===c.creado) ? ap : null; }
 function miAprob(){ return aprobValida(S.aprob, S.cli); }
+// Prueba gratuita: el menú solo se ve hasta el último día de la prueba (el resto de la app funciona igual)
+function ultimoDiaVisible(plan){ const ap=miAprob(), a=acceso(ap); if(a.k!=='prueba' || !ap?.hasta || !plan) return null; return Math.min(diasPlan(plan)-1, diffDays(plan.inicio, ap.hasta)); }
+function diaBloqueado(plan,d){ const u=ultimoDiaVisible(plan); return u!=null && d>u; }
+const ICO_CANDADO='<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
+function tarjetaBloqueada(plan){ const ap=miAprob();
+  return `<article class="meal bloqueado"><h3>${ICO_CANDADO.replace('width="14" height="14"','width="20" height="20"')}Disponible al contratar tu tarifa</h3>
+    <p class="prep">Durante la prueba gratuita ves el menú de los días que dura tu prueba (hasta el ${fmtFecha(ap.hasta,{weekday:'long',day:'numeric',month:'long'})}). Contrata tu tarifa en el centro y verás el menú completo y la lista de la compra de toda la semana. Tus datos y tu progreso se mantienen.</p>
+    <details class="acc" data-acc="tarifasBloq" ${accAbierto('tarifasBloq')}><summary><span class="sum"><span>Ver tarifas</span><i class="chev-acc" aria-hidden="true"></i></span></summary><div class="acc-body">${bloqueTarifas()}</div></details></article>`; }
 /* ---------- Tarifas, prueba gratuita y caducidad ---------- */
 const TARIFAS_DEF=[{id:'mensual',n:'Mensual',meses:1,precio:10},{id:'trimestral',n:'Trimestral',meses:3,precio:25},{id:'semestral',n:'Semestral',meses:6,precio:50},{id:'anual',n:'Anual',meses:12,precio:95}];
 function tarifas(){ const t=S.centro?.tarifas; return Array.isArray(t)&&t.length ? t : TARIFAS_DEF; }
@@ -1494,9 +1507,10 @@ function vMenu(){
   const d=S.dia, tot=totalesDia(plan,d,c.perfil), hi=diffDays(plan.inicio,hoy());
   const prox=proxRevision(plan), falta=diffDays(hoy(),prox);
   const avisoRev = falta<=1 ? `<div class="notice"><b>${falta<0?'Tu revisión está pendiente':'Toca revisión'}</b><p>Pésate y mide tu cintura, cadera, pierna y pecho para ajustar tu siguiente menú.</p><div><button class="btn primary small" data-go="progreso">Registrar medidas</button></div></div>` : '';
-  const dias = plan.dias.map((_,i)=>{ const f=addDays(plan.inicio,i); const lib=diaLibre(plan,i,c.perfil); return `<button class="day ${i===hi?'today':''} ${lib?'libre':''}" data-dia="${i}" aria-current="${i===d}"><small>${lib?'LIBRE':'SEM '+(Math.floor(i/7)+1)}</small>${fmtFecha(f,{weekday:'short',day:'numeric'})}</button>`; }).join('');
+  const dias = plan.dias.map((_,i)=>{ const f=addDays(plan.inicio,i); const lib=diaLibre(plan,i,c.perfil); const bq=diaBloqueado(plan,i); return `<button class="day ${i===hi?'today':''} ${lib&&!bq?'libre':''} ${bq?'bloq':''}" data-dia="${i}" aria-current="${i===d}"${bq?' aria-label="Bloqueado durante la prueba"':''}><small>${bq?ICO_CANDADO+'PRUEBA':lib?'LIBRE':'SEM '+(Math.floor(i/7)+1)}</small>${fmtFecha(f,{weekday:'short',day:'numeric'})}</button>`; }).join('');
   const lib=libreDe(c.perfil), libreHoy=diaLibre(plan,d,c.perfil); const FD=factoresDia(plan,d,c.perfil), objD=objetivoDia(plan,d,c.perfil);
-  const meals = (libreHoy && lib.tipo==='dia') ? tarjetaLibre('dia') : TIPOS.map(t=>{
+  const bloq=diaBloqueado(plan,d);
+  const meals = bloq ? tarjetaBloqueada(plan) : (libreHoy && lib.tipo==='dia') ? tarjetaLibre('dia') : TIPOS.map(t=>{
     if(esLibre(plan,d,t,c.perfil)) return tarjetaLibre(t);
     const id=plan.dias[d][t];
     if(!id) return `<article class="meal"><header><span class="mtype">${icon(t)}${TIPO_LABEL[t]}</span></header><p class="prep">No hay platos compatibles con tus preferencias para esta comida. Revisa tus datos o habla con el centro.</p></article>`;
@@ -1514,7 +1528,7 @@ function vMenu(){
   <div class="stack"><span class="eyebrow">Plan del ${fmtFecha(plan.inicio,{day:'numeric',month:'long'})} al ${fmtFecha(addDays(plan.inicio,diasPlan(plan)-1),{day:'numeric',month:'long'})} · ${OBJETIVOS[c.perfil.objetivo].n}</span>
   <h1>${fmtFecha(addDays(plan.inicio,d),{weekday:'long',day:'numeric',month:'long'})}</h1></div>
   <div class="days" role="tablist" aria-label="Días del plan">${dias}</div>
-  ${libreHoy && lib.tipo==='dia' ? '' : `<div class="macros">
+  ${bloq || (libreHoy && lib.tipo==='dia') ? '' : `<div class="macros">
     <div><b>${tot.k}</b><span>kcal · objetivo ${objD}</span><div class="bar"><i style="width:${Math.min(100,Math.round(tot.k/objD*100))}%"></i></div></div>
     <div><b>${tot.P} g</b><span>proteína · obj. ${plan.prot} g</span><div class="bar"><i style="width:${Math.min(100,Math.round(tot.P/plan.prot*100))}%"></i></div></div>
     <div><b>${tot.C} g</b><span>hidratos</span></div>
@@ -1634,8 +1648,10 @@ function vCompra(){
   const c=S.cli, plan=c.plan, sem=Math.min(S.semana, semanasPlan(plan)-1); S.semana=sem; const L=listaCompra(plan,sem,c.perfil); const {grupos,extras,sub}=L;
   const marcas=leerMarcas(claveCompra(plan,sem));
   const cambios=Object.values(grupos).flat().map(it=>[it,cambioItem(it,marcas)]).filter(([,c])=>c);
-  const ini=addDays(plan.inicio,sem*7), fin=addDays(ini,6);
+  const ini=addDays(plan.inicio,sem*7), fin=addDays(ini,6); const uv=ultimoDiaVisible(plan);
+  const avisoPrueba = uv!=null && uv<sem*7+6 ? `<div class="notice"><b>Lista de tu prueba gratuita</b><p>${uv<sem*7?'Esta semana queda fuera de tu prueba: contrata tu tarifa en el centro para ver su menú y su lista.':`Incluye solo los días de tu prueba, hasta el ${fmtFecha(addDays(plan.inicio,uv),{weekday:'long',day:'numeric',month:'long'})}. Al contratar tu tarifa verás la de toda la semana.`}</p></div>` : '';
   return `<div class="stack"><span class="eyebrow">Lista de la compra</span><h1>Semana ${sem+1}</h1><p class="lead">Del ${fmtFecha(ini,{weekday:'long',day:'numeric',month:'long'})} al ${fmtFecha(fin,{weekday:'long',day:'numeric',month:'long'})}. Cantidades para una persona, ya redondeadas hacia arriba.</p></div>
+  ${avisoPrueba}
   <div class="row" style="justify-content:space-between"><div class="seg" role="group" aria-label="Semana">${Array.from({length:semanasPlan(plan)},(_,i)=>`<button data-sem="${i}" aria-pressed="${sem===i}">Semana ${i+1}</button>`).join('')}</div>
   <div class="row"><button class="btn small" id="copiarLista">Copiar lista</button><button class="btn small ghost" id="limpiarLista">Desmarcar todo</button></div></div>
   ${cambios.length?`<div class="notice"><b>Has cambiado platos después de tachar productos</b><p>Te ${cambios.length===1?'falta 1 cosa':'faltan '+cambios.length+' cosas'} por comprar: ${esc(cambios.map(([it])=>it.n).join(', '))}. Están marcadas en la lista.</p></div>`:''}
@@ -2219,7 +2235,8 @@ function contextoAsistente(){
   const lib=libreDe(pf); L.push(`Comida libre: ${lib?`los ${DIAS_N[lib.dia]} (${lib.tipo==='dia'?'todo el día':lib.tipo})`:'no tiene'}.`);
   L.push(`Objetivo diario del menú: ${plan.kcal} kcal y ${plan.prot} g de proteína. Las cantidades son en crudo salvo legumbres de bote.`);
   const h=indiceHoy(plan), n=diasPlan(plan);
-  for(let d=Math.max(0,h-1); d<n; d++){
+  const uv=ultimoDiaVisible(plan);
+  for(let d=Math.max(0,h-1); d<n && (uv==null || d<=uv); d++){
     const det=d>=h && d<=h+2, FD=factoresDia(plan,d,pf);
     L.push(`\n## ${fmtFecha(addDays(plan.inicio,d),{weekday:'long',day:'numeric',month:'long'})}${d===h?' (HOY)':d===h+1?' (MAÑANA)':d===h-1?' (AYER)':''}`);
     if(diaLibre(plan,d,pf) && lib?.tipo==='dia'){ L.push('- Día libre: come lo que le apetezca.'); continue; }
