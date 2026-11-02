@@ -1107,7 +1107,7 @@ function vAuth(){
       <p class="err" id="aErr"></p>
       <div><button class="btn primary">Crear mi cuenta</button></div>
     </form>
-    ${bloqueInfo()}`;
+    ${bloqueInfo(false,false)}`;
   return `${cab}<div class="stack"><span class="eyebrow">Menús saludables para socios</span><h1>Entra en la app</h1></div>${tabsA}
     <form class="panel" id="fLogin" method="post" action="" novalidate>
       <div class="field"><label for="aEmail">Correo electrónico</label><input class="inp" id="aEmail" name="email" type="email" autocomplete="username" inputmode="email" value="${esc(S.authEmail||'')}"></div>
@@ -1301,9 +1301,9 @@ S.accOpen=S.accOpen||{};
 const accAbierto=(k,def=false)=> (S.accOpen[k]??def) ? 'open' : '';
 document.addEventListener('toggle', e=>{ const d=e.target; if(d?.dataset?.acc) S.accOpen[d.dataset.acc]=d.open; }, true);
 function bloqueFaqs(pref='f'){ const l=faqs(); return l.length ? l.map((f,i)=>`<details class="faq" data-acc="${pref}${i}" ${accAbierto(pref+i)}><summary>${esc(f.q)}</summary><p>${esc(f.a).replace(/\n/g,'<br>')}</p></details>`).join('') : '<p class="prep">Aún no hay preguntas.</p>'; }
-function bloqueInfo(abrirTarifas=false){
+function bloqueInfo(abrirTarifas=false, conTarifas=true){
   return `<div class="info-acc">
-    <details class="acc" data-acc="tarifas" ${accAbierto('tarifas',abrirTarifas)}><summary><span class="sum"><span>Tarifas</span><small>Desde ${fmtEurC(Math.min(...tarifas().map(t=>t.precio/t.meses)))}/mes${pruebaOn()?' · prueba gratis':''}</small><i class="chev-acc" aria-hidden="true"></i></span></summary><div class="acc-body">${bloqueTarifas()}</div></details>
+    ${conTarifas?`<details class="acc" data-acc="tarifas" ${accAbierto('tarifas',abrirTarifas)}><summary><span class="sum"><span>Tarifas</span><small>Desde ${fmtEurC(Math.min(...tarifas().map(t=>t.precio/t.meses)))}/mes${pruebaOn()?' · prueba gratis':''}</small><i class="chev-acc" aria-hidden="true"></i></span></summary><div class="acc-body">${bloqueTarifas()}</div></details>`:''}
     <details class="acc" data-acc="faqs" ${accAbierto('faqs')}><summary><span class="sum"><span>Preguntas frecuentes</span><small>${faqs().length} respuestas</small><i class="chev-acc" aria-hidden="true"></i></span></summary><div class="acc-body faqs">${bloqueFaqs()}</div></details>
   </div>`;
 }
@@ -1447,7 +1447,7 @@ function vPendiente(){
   return `${logoGrande()}<div class="stack"><span class="eyebrow">${T[0]}</span><h1>${T[1]}</h1><p class="lead">${T[2]}</p></div>
   ${a.k==='caducado'||a.k==='prueba_fin'?`<div class="panel"><h3>Renovar</h3>${bloqueRenovar('¿Con qué tarifa quieres seguir?')}</div>`:''}
   ${a.k==='pend'?`<div class="panel" id="fInteres">${campoInteres(a.k==='prueba_fin'&&S.cli.interes==='prueba'?(tarifas().find(t=>+t.meses===1)||tarifas()[0])?.id:S.cli.interes, a.k==='pend'?'Lo que has elegido':'¿Con qué tarifa quieres seguir?').replace(`<div class="choices">`, `<div class="choices">`)}</div>`:''}
-  ${bloqueInfo(a.k==='prueba_fin'||a.k==='caducado')}
+  ${bloqueInfo(false,a.k==='off')}
   <div class="panel"><div class="fgrid">
     <div><span class="eyebrow">Nombre</span><p>${esc(S.cli.nombre)} ${esc(S.cli.apellidos)}</p></div>
     <div><span class="eyebrow">Correo</span><p style="word-break:break-all">${esc(S.cli.email)}</p></div>
