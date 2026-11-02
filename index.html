@@ -571,6 +571,16 @@ const ING = {
   judias:{n:'Judías verdes',s:'fruta',k:31,p:1.8,c:7,f:0.2,kg:true,pr:2.90},
   pepino:{n:'Pepino',s:'fruta',k:15,p:0.7,c:3.6,f:0.1,kg:true,pr:1.70},
   guisantes:{n:'Guisantes congelados',s:'fruta',k:81,p:5.4,c:14,f:0.4,pk:1000,pr:1.95,pd:'bolsa congelada 1 kg'},
+  sepia:{n:'Sepia o choco limpio (congelado)',s:'pescado',k:79,p:16.2,c:0.8,f:0.7,a:['marisco'],d:'marisco',pk:400,pr:4.20,pd:'bolsa congelada 400 g'},
+  boquerones:{n:'Boquerones frescos limpios',s:'pescado',k:131,p:20.4,c:0,f:4.8,a:['pescado'],d:'pescado',kg:true,pr:7.50},
+  dorada:{n:'Dorada en lomos',s:'pescado',k:121,p:20,c:0,f:4.5,a:['pescado'],d:'pescado',pk:300,pr:5.50,pd:'bandeja de lomos ~300 g'},
+  emperador:{n:'Emperador (pez espada) en rodajas',s:'pescado',k:144,p:19.7,c:0,f:6.7,a:['pescado'],d:'pescado',pk:400,pr:5.95,pd:'bandeja ~400 g'},
+  bacalao:{n:'Bacalao desalado en lomos (congelado)',s:'pescado',k:82,p:17.8,c:0,f:0.7,a:['pescado'],d:'pescado',pk:400,pr:5.50,pd:'bolsa congelada 400 g'},
+  esparragos:{n:'Espárragos trigueros',s:'fruta',k:20,p:2.2,c:3.9,f:0.1,pk:250,pr:1.80,pd:'manojo 250 g'},
+  habas:{n:'Habas baby congeladas',s:'fruta',k:76,p:6.5,c:9,f:0.6,a:['legumbres'],pk:400,pr:2.40,pd:'bolsa congelada 400 g'},
+  calabaza:{n:'Calabaza',s:'fruta',k:26,p:1,c:6.5,f:0.1,kg:true,pr:1.60},
+  fideos:{n:'Fideos',s:'cereal',k:359,p:12,c:72,f:1.5,a:['gluten'],sg:'Fideos sin gluten',pk:500,pr:0.85,pd:'paquete 500 g'},
+  mayonesa:{n:'Mayonesa ligera',s:'despensa',k:290,p:0.8,c:7,f:29,a:['huevo'],d:'huevo',pk:430,pr:1.80,pd:'bote 430 ml',prop:true},
 };
 
 // Recetas: [id, tipo, nombre, [[ingrediente, gramos]...], preparación, cosas de casa]
@@ -624,6 +634,20 @@ const REC = [
  ['c23','comida','Pollo con champiñones y patatas',[['pollo',150],['champinones',150],['cebolla',50],['patata',200],['aceite',10]],'Dora el pollo en tacos, añade cebolla y champiñones. Patatas al horno o cocidas.',['ajo','perejil','sal']],
  ['c25','comida','Macarrones con boloñesa de soja',[['pasta',80],['soja_tex',50],['tomate_tri',150],['cebolla',50],['zanahoria',40],['aceite',10]],'Hidrata la soja 10 min en agua caliente y escúrrela. Sofríe cebolla y zanahoria, añade la soja y el tomate 10 min. Mezcla con la pasta.',['orégano','sal']],
  ['c24','comida','Potaje de garbanzos con pollo',[['garbanzos',200],['pollo',100],['zanahoria',60],['patata',80],['cebolla',40],['aceite',8]],'Sofríe la cebolla y el pollo, añade zanahoria, patata y agua 15 min, y los garbanzos 5 min más.',['pimentón','laurel','sal']],
+ // Cocina andaluza de diario
+ ['c26','comida','Puchero andaluz (garbanzos, pollo y verduras)',[['pollo',120],['garbanzos',150],['patata',100],['zanahoria',60],['puerro',60],['serrano',15]],'Cuece en agua el pollo, el jamón, la zanahoria y el puerro 30 min (o 15 en olla exprés), quitando la espuma. Añade la patata 15 min y los garbanzos los últimos 5. Sirve el caldo y luego la "pringá" (pollo y verduras).',['hierbabuena','sal']],
+ ['c27','comida','Carne con tomate y patatas al horno',[['lomo',150],['tomate_tri',150],['pimiento',60],['cebolla',50],['patata',180],['aceite',10]],'Dora el lomo en tacos con ajo, añade cebolla y pimiento, y luego el tomate. 20 min a fuego suave. Patatas en gajos al horno 25 min a 200 °C.',['ajo','laurel','comino','sal']],
+ ['c28','comida','Pollo en salsa de almendras con arroz',[['pollo',150],['cebolla',70],['almendras',15],['arroz',60],['aceite',8]],'Sella el pollo y resérvalo. Pocha ajo y cebolla, añade un chorrito de vino y las almendras con caldo. Tritura la salsa, mete el pollo 5 min más y sirve con arroz blanco.',['ajo','vino blanco','caldo de pollo','sal']],
+ ['c29','comida','Papas con choco',[['sepia',170],['patata',220],['cebolla',50],['pimiento',50],['tomate_tri',40],['guisantes',40],['aceite',10]],'Pocha cebolla, ajo y pimiento, añade el tomate y el laurel. Sofríe la sepia, un chorrito de vino y agua: 15 min. Añade las patatas troceadas y los guisantes y cuece 20 min más.',['ajo','laurel','vino blanco','sal']],
+ ['c30','comida','Pollo al ajillo con patatas al horno',[['pollo',160],['patata',220],['ensalada',50],['aceite',12]],'Patatas en gajos al horno 25 min a 200 °C. Dora el pollo en trozos con ajos laminados, añade un chorrito de vino y perejil y deja reducir.',['ajo','vino blanco','perejil','sal']],
+ ['c31','comida','Flamenquín al horno con patatas y ensalada',[['lomo',130],['serrano',25],['huevo',30],['pan',30],['patata',150],['ensalada',60],['aceite',8]],'Pon el jamón sobre los filetes finos de lomo y enróllalos. Pásalos por huevo y pan rallado y hornéalos 20 min a 200 °C con un hilo de aceite, junto a las patatas en gajos.',['sal']],
+ ['c32','comida','Bacalao con tomate y patatas',[['bacalao',180],['tomate_tri',150],['pimiento',60],['cebolla',50],['patata',180],['aceite',10]],'Haz un sofrito de cebolla y pimiento, añade el tomate 10 min. Mete el bacalao en la salsa 8 min. Patatas cocidas o al horno.',['ajo','sal']],
+ ['c33','comida','Dorada al horno con patatas panaderas',[['dorada',170],['patata',200],['cebolla',50],['pimiento',50],['aceite',10]],'Patata, cebolla y pimiento en láminas al horno 25 min a 200 °C. Pon la dorada encima con ajo y limón y 10-12 min más.',['limón','ajo','perejil','sal']],
+ ['c34','comida','Cazuela de fideos con langostinos y choco',[['langostinos',100],['sepia',60],['fideos',80],['tomate_tri',50],['pimiento',40],['cebolla',40],['aceite',8]],'Sofríe cebolla, pimiento y la sepia, añade el tomate y caldo. Echa los fideos y cuece 8-10 min. Los langostinos, los últimos 3 min.',['ajo','pimentón','caldo de pescado','sal']],
+ ['c35','comida','Habas con jamón y huevo',[['habas',250],['serrano',40],['huevo',60],['cebolla',50],['pan',40],['aceite',10]],'Rehoga la cebolla y el ajo, añade el jamón en taquitos y las habas con un poco de agua. 12-15 min tapadas. Sirve con el huevo encima (escalfado o a la plancha).',['ajo','sal']],
+ ['c36','comida','Patatas guisadas con carne',[['ternera',140],['patata',220],['zanahoria',60],['guisantes',40],['cebolla',50],['tomate_tri',40],['aceite',8]],'Dora la carne en tacos, añade cebolla, ajo y tomate, y agua: 40 min (15 en olla exprés). Añade patata, zanahoria y guisantes y cuece 20 min más.',['ajo','laurel','pimentón','sal']],
+ ['c37','comida','Salmorejo cordobés y pechuga de pollo a la plancha',[['pollo',130],['tomate',250],['pan',50],['aceite',12],['huevo',30],['serrano',20]],'Tritura el tomate con el pan, el ajo y la sal, y añade el aceite poco a poco. Sirve frío con huevo duro y jamón picados. De segundo, el pollo a la plancha.',['ajo','sal']],
+ ['c38','comida','Potaje de garbanzos con bacalao y espinacas',[['garbanzos',220],['bacalao',100],['espinacas',100],['cebolla',40],['tomate_tri',40],['aceite',8]],'Sofríe cebolla y ajo, añade el tomate y el pimentón, agua y los garbanzos. A los 5 min, las espinacas y el bacalao en trozos 6-8 min.',['ajo','pimentón','comino','sal']],
 
  // ---------- MERIENDAS ----------
  ['m01','merienda','Yogures con fresas',[['yogur',250],['fresas',100]],'Mezcla y listo.',[]],
@@ -666,6 +690,18 @@ const REC = [
  ['n21','cena','Tortilla de calabacín con ensalada',[['huevo',120],['calabacin',150],['cebolla',40],['ensalada',60],['tomate',100],['pan',40],['aceite',10]],'Pocha el calabacín y la cebolla, mezcla con los huevos batidos y cuaja.',['sal']],
  ['n22','cena','Tortilla de claras y atún con ensalada',[['claras',200],['huevo',60],['atun',60],['ensalada',80],['tomate',100],['pan',40],['aceite',8]],'Bate claras y huevo, añade el atún desmigado y cuaja. Ensalada aparte.',['sal']],
  ['n19','cena','Huevos al plato con tomate',[['huevo',120],['tomate_tri',120],['pimiento',40],['pan',40],['aceite',5]],'Sofríe el pimiento, añade el tomate y casca los huevos encima. Tapa hasta que cuajen.',['sal']],
+ // Cocina andaluza de diario
+ ['n23','cena','Huevos a la flamenca',[['huevo',120],['tomate_tri',120],['guisantes',50],['serrano',25],['pimiento',40],['pan',40],['aceite',5]],'Sofríe el pimiento, añade el tomate y los guisantes 8 min. Pon el jamón, casca los huevos encima y hornea (o tapa) hasta que cuaje la clara.',['ajo','sal']],
+ ['n24','cena','Pipirrana con atún y huevo',[['atun',80],['tomate',250],['pimiento',70],['pepino',80],['cebolla',30],['huevo',60],['pan',40],['aceite',10]],'Pica muy fino tomate, pimiento, pepino y cebolla. Machaca el ajo con la yema del huevo y el aceite, mézclalo todo y añade la clara picada y el atún. Mejor fría.',['ajo','vinagre','sal']],
+ ['n25','cena','Sopa de picadillo',[['pollo',90],['huevo',60],['serrano',25],['fideos',30],['zanahoria',40],['puerro',40]],'Cuece el pollo con la zanahoria y el puerro en agua 30 min y cuela el caldo. Añade los fideos, el pollo desmenuzado, el jamón y el huevo duro picados. 5 min y una hoja de hierbabuena.',['hierbabuena','sal']],
+ ['n26','cena','Revuelto de espárragos trigueros con jamón',[['huevo',120],['esparragos',150],['serrano',25],['pan',40],['aceite',6]],'Saltea los trigueros en trozos con ajo 5 min, añade el jamón y los huevos y remueve a fuego bajo hasta cuajar.',['ajo','sal']],
+ ['n27','cena','Boquerones al horno con ajo y perejil y ensalada',[['boquerones',170],['ensalada',80],['tomate',100],['pan',40],['aceite',8]],'Pon los boquerones abiertos en una bandeja con ajo y perejil picados y un hilo de aceite. Horno 8-10 min a 200 °C. Ensalada aparte.',['ajo','perejil','limón','sal']],
+ ['n28','cena','Choco a la plancha con patatas y ensalada',[['sepia',200],['patata',120],['ensalada',80],['tomate',100],['aceite',8]],'Haz la sepia a la plancha muy caliente y aliña con ajo y perejil picados en aceite. Patata cocida o al microondas.',['ajo','perejil','limón','sal']],
+ ['n29','cena','Emperador a la plancha con pimientos asados',[['emperador',150],['pimiento',150],['cebolla',40],['pan',40],['aceite',6]],'Asa pimientos y cebolla 30 min a 200 °C (o al microondas), pélalos y aliña. El emperador, a la plancha 2-3 min por lado.',['ajo','limón','sal']],
+ ['n30','cena','Gazpacho y pechuga de pollo a la plancha',[['pollo',130],['tomate',250],['pimiento',40],['pepino',60],['pan',40],['aceite',10]],'Tritura tomate, pimiento, pepino, ajo, un poco de pan, aceite, vinagre y sal, y enfría. El pollo a la plancha.',['ajo','vinagre','sal']],
+ ['n31','cena','Crema de calabaza con huevo y jamón',[['calabaza',250],['huevo',60],['serrano',30],['puerro',50],['patata',60],['aceite',8]],'Cuece calabaza, puerro y patata 20 min y tritura. Por encima, huevo duro y jamón picados.',['sal','pimienta']],
+ ['n32','cena','Ensaladilla de atún',[['atun',80],['patata',200],['huevo',60],['zanahoria',40],['guisantes',40],['mayonesa',25]],'Cuece la patata, la zanahoria y los guisantes y deja enfriar. Mezcla con el atún, el huevo duro picado y la mayonesa.',['sal']],
+ ['n33','cena','Serranito casero (lomo, jamón y pimiento)',[['lomo',100],['pan',80],['serrano',20],['pimiento',80],['tomate',40],['aceite',6]],'Haz el lomo y el pimiento a la plancha. Monta el bocadillo con el tomate en rodajas y el jamón.',['ajo','sal']],
 ].map(([id,t,n,i,p,x])=>{
   const r={id,t,n,i,p,x}; let k=0,P=0,C=0,F=0;
   for(const [key,g] of i){const z=ING[key]; k+=z.k*g/100; P+=z.p*g/100; C+=z.c*g/100; F+=z.f*g/100;}
