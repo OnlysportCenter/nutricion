@@ -125,6 +125,7 @@ main .wrap{padding-block:24px 64px;display:flex;flex-direction:column;gap:24px}
 .chip label{display:inline-block;padding:6px 12px;border:1px solid var(--line);border-radius:999px;cursor:pointer;font-size:.88rem;background:var(--surface)}
 .chip input:checked + label{background:var(--bad-soft);border-color:var(--bad);color:var(--ink)}
 .chip.pos input:checked + label{background:var(--accent-soft);border-color:var(--accent)}
+.chip.nev input:checked + label{background:#F2AA3C;border-color:#F2AA3C;color:#121212;font-weight:700}
 .chip input:focus-visible + label{outline:2px solid var(--accent)}
 .steps{display:flex;gap:6px}
 .steps i{flex:1;height:4px;border-radius:2px;background:var(--line)}
@@ -182,6 +183,18 @@ main .wrap{padding-block:24px 64px;display:flex;flex-direction:column;gap:24px}
 .prep{font-size:.9rem;color:var(--muted)}
 .extras{font-size:.82rem;color:var(--muted)}
 .meal .row{margin-top:auto}
+.tag.tiempo{background:var(--accent-soft);color:var(--ink)}
+.tag.doble{background:var(--saffron-soft);color:var(--saffron)}
+.cocina-nota{margin:0;font-size:.88rem;font-weight:600;padding:8px 12px;border-radius:10px;background:var(--saffron-soft);color:var(--ink)}
+.btn.rapido{display:inline-flex;align-items:center;gap:6px;border-color:var(--saffron);color:var(--ink)}
+.btn.rapido svg{color:var(--saffron)}
+.meal.domingo{border:2px solid var(--saffron)}
+.meal.domingo .acc{margin:0}
+.menu-atajos{display:flex;gap:8px;flex-wrap:wrap}
+.btn.nevera-btn{display:inline-flex;align-items:center;gap:6px;background:#F2AA3C;border-color:#F2AA3C;color:#121212;font-weight:700}
+.btn.nevera-btn:hover{filter:brightness(1.06)}
+.btn.nevera-gen{width:100%;justify-content:center;margin-top:6px}
+
 
 /* compra */
 .shop{columns:3 260px;column-gap:24px}
@@ -750,6 +763,27 @@ const POSTRES = [
 });
 const POSTREMAP = Object.fromEntries(POSTRES.map(p=>[p.id,p]));
 const RECMAP = Object.fromEntries(REC.map(r=>[r.id,r]));
+// Tiempo de cada plato (min), dificultad (m = media) y si aguanta bien en táper (t)
+const META_TXT='d01:5,d02:5,d03:5,d04:8,d05:8,d06:8,d07:3,d08:3,d09:12,d10:3,d11:12,d12:5,d13:6,d14:5,d15:8,d16:5,d17:3,d19:5,d20:10,d21:8,d18:3,c01:45t,c02:25t,c03:30t,c04:25t,c05:20t,c06:35t,c07:15t,c08:35,c09:25t,c10:20t,c11:25t,c12:40mt,c13:30mt,c14:35mt,c15:25t,c16:30mt,c17:30t,c18:20t,c19:25t,c20:35t,c21:50mt,c22:30t,c23:30t,c25:30t,c24:30t,c26:60mt,c27:40t,c28:40mt,c29:45mt,c30:35t,c31:40mt,c32:30t,c33:40,c34:30m,c35:25t,c36:60mt,c37:20t,c38:25t,c39:20,c40:25t,c41:20,c42:15,m01:2,m02:2,m03:1,m04:4,m05:5,m06:3,m07:5,m08:2,m09:12,m10:3,m11:1,m12:5,m14:3,m15:3,m16:8,m13:3,m17:2,m18:3,m19:1,m20:2,m21:1,n01:10,n02:30,n03:15,n04:25,n05:15,n06:12,n07:15,n08:15,n09:5,n10:15,n11:5,n12:15,n13:15,n14:10,n15:8,n16:35m,n17:15,n18:12,n20:25,n21:20,n22:12,n19:15,n23:20,n24:15,n25:40m,n26:12,n27:15,n28:15,n29:20,n30:15,n31:30,n32:30,n33:15,n34:10,n35:10,n36:15,n37:10';
+const META=Object.fromEntries(META_TXT.split(',').map(x=>{ const [id,v]=x.split(':'); return [id,{min:parseInt(v,10), dif:v.includes('m')?'m':'f', tup:v.includes('t')}]; }));
+for(const r of REC){ Object.assign(r, META[r.id]||{min:15,dif:'f',tup:false}); }
+const etiquetaTiempo = r => `${r.min} min · ${r.dif==='m'?'media':'fácil'}`;
+/* ---------- Cocina una vez y come dos ---------- */
+const COCINA = {
+  normal:{n:'Cocino cada comida', d:'Cada plato, el día que toca'},
+  sobras3:{n:'Algunos días ceno lo que sobra de la comida', d:'Lunes, miércoles y viernes: cocinas una vez y comes dos'},
+  sobras:{n:'Ceno lo que sobra de la comida', d:'Todos los días: a mediodía haces el doble'},
+  domingo:{n:'Cocino el domingo para varios días', d:'Dejas hechas las comidas de lunes, martes y miércoles'}
+};
+function cocinaDe(pf){ return COCINA[pf?.cocina] ? pf.cocina : 'normal'; }
+function dowPlan(plan,d){ return parseISO(addDays(plan.inicio,d)).getDay(); }
+function diaSobras(plan,d,pf){ const m=cocinaDe(pf); return m==='sobras' || (m==='sobras3' && [1,3,5].includes(dowPlan(plan,d))); }
+function esSobras(plan,d,pf){ const di=plan.dias[d]; return !!di?.comida && di.cena===di.comida && !esLibre(plan,d,'comida',pf) && !esLibre(plan,d,'cena',pf); }
+function diaTupper(plan,d,pf){ return cocinaDe(pf)==='domingo' && [1,2,3].includes(dowPlan(plan,d)); }
+function domingoAntes(plan,d){ for(let i=d-1; i>=0 && i>=d-3; i--) if(dowPlan(plan,i)===0) return i; return -1; }
+// Cambia un plato de un día; si la cena de ese día eran las sobras de la comida, la cena sigue a la comida
+function ponerPlato(plan,d,t,id,pf){ const di=plan.dias[d], old=di[t]; di[t]=id; if(t==='comida' && di.cena===old && diaSobras(plan,d,pf)) di.cena=id; }
+
 const TIPOS = ['desayuno','comida','merienda','cena'];
 const REPARTO = {desayuno:.25, comida:.35, merienda:.12, cena:.28};
 const ICON = {
@@ -868,25 +902,30 @@ function generarPlan(cli, inicio, semilla, semanas=2){
   const densObj = obj.prot*4/obj.kcal;
   const orden = {}; const pos = {};
   for(const t of TIPOS){ orden[t]=shuffle(el[t].map(r=>r.id), rand); pos[t]=0; }
+  // Cocina del domingo: de lunes a miércoles, comidas que aguantan bien en táper
+  orden.comidaT=shuffle(el.comida.filter(r=>r.tup).map(r=>r.id), rand); pos.comidaT=0;
+  const pseudo={inicio}, pfG=cli.perfil||{};
   const dias=[];
   for(let d=0; d<7*Math.max(1,Math.min(4,semanas||2)); d++){
     const dia={};
     for(const t of TIPOS){
-      const l=orden[t]; if(!l.length){ dia[t]=null; continue; }
+      if(t==='cena' && dia.comida && diaSobras(pseudo,d,pfG) && !pfG.fijos?.cena && !esLibre(pseudo,d,'comida',pfG) && !esLibre(pseudo,d,'cena',pfG)){ dia.cena=dia.comida; continue; }
+      const kk = (t==='comida' && diaTupper(pseudo,d,pfG) && orden.comidaT.length>=3) ? 'comidaT' : t;
+      const l=orden[kk]; if(!l.length){ dia[t]=null; continue; }
       const fijo=cli.perfil?.fijos?.[t];
       if(fijo && RECMAP[fijo] && recetaPermitida(RECMAP[fijo],cli,true)){ dia[t]=fijo; continue; }
       // Entre los 3 siguientes platos de la rotación, el que mejor encaja con la proteína que pide el objetivo
       // (la cena, además, con un ingrediente principal distinto al de la comida). Así se mantiene la variedad.
       const prin = rid => RECMAP[rid].i[0][0];
-      const k0=pos[t]%l.length; let mejor=k0, mejorS=-1e9;
+      const k0=pos[kk]%l.length; let mejor=k0, mejorS=-1e9;
       for(let j=0;j<Math.min(3,l.length);j++){
-        const k=(pos[t]+j)%l.length, r=RECMAP[l[k]];
+        const k=(pos[kk]+j)%l.length, r=RECMAP[l[k]];
         const rep = t==='cena' && dia.comida && l.length>2 && prin(l[k])===prin(dia.comida);
         const dv=densProt(r)-densObj, s=(dv<0?(t==='merienda'?0.6:2)*dv:-0.5*dv) - (rep?1:0) - j*0.004;
         if(s>mejorS){ mejorS=s; mejor=k; }
       }
       [l[k0],l[mejor]]=[l[mejor],l[k0]];
-      const id=l[k0]; pos[t]++;
+      const id=l[k0]; pos[kk]++;
       dia[t]=id;
     }
     dias.push(dia);
@@ -1396,7 +1435,7 @@ function avisoFinPlan(){
 function clienteActivo(){ return !!(consOk(S.cli) && acceso(miAprob()).ok); }
 function tabsDisponibles(){
   const t=[];
-  if(clienteActivo() && S.cli.perfil && S.cli.plan) t.push(['menu','Mi menú'],['compra','Lista de la compra'],['dulces','Dulces'],['progreso','Progreso'],...(asistenteVisible()?[['asistente','Asistente']]:[]),['faq','Preguntas'],['perfil','Mis datos']);
+  if(clienteActivo() && S.cli.perfil && S.cli.plan) t.push(['menu','Mi menú'],['compra','Lista de la compra'],['dulces','Dulces'],['fuera','Comer fuera'],['progreso','Progreso'],...(asistenteVisible()?[['asistente','Asistente']]:[]),['faq','Preguntas'],['perfil','Mis datos']);
   else t.push(['inicio', S.admin && !S.cli ? 'Mi cuenta' : 'Inicio']);
   if(S.admin) t.push(['panel','Clientes'],['ajustes','Ajustes'],['web','Web']);
   return t;
@@ -1424,7 +1463,7 @@ function render(){
   const pend = S.clientes.filter(c=>!aprobValida(S.aprobs[c.id],c) || c.renovacion).length;
   tabs.innerHTML = list.map(([k,l])=>`<button class="tab" data-tab="${k}" aria-current="${S.tab===k}">${l}${k==='panel'&&pend?`<span class="dot">${pend}</span>`:''}</button>`).join('');
   $('#who').textContent = S.cli ? (S.cli.nombre+' '+S.cli.apellidos) : (S.admin?'Administración del centro':'');
-  const v = {inicio:vInicio, menu:vMenu, compra:vCompra, dulces:vDulces, progreso:vProgreso, perfil:vPerfil, panel:vPanel, ajustes:vPanel, web:vWeb, asistente:vAsistente, faq:vFaq}[S.tab];
+  const v = {inicio:vInicio, menu:vMenu, compra:vCompra, dulces:vDulces, fuera:vFuera, progreso:vProgreso, perfil:vPerfil, panel:vPanel, ajustes:vPanel, web:vWeb, asistente:vAsistente, faq:vFaq}[S.tab];
   main.innerHTML = v();
   after();
 }
@@ -1510,11 +1549,14 @@ function vPendiente(){
   ${S.admin?`<div class="notice ok"><b>Eres administrador</b><p>Ve a la pestaña Clientes y ${pruebaOn()?'actívate la prueba o un plan':'regístrate un pago'} para probar el cuestionario.</p></div>`:''}`;
 }
 
+function cocinaCampos(){
+  const w=S.wizard; return `<div class="field"><label>¿Cómo te organizas para cocinar?</label><span class="hint">Si te da pereza cocinar a diario, la app te organiza para cocinar una vez y comer dos.</span>${radios('cocina',COCINA,w.cocina||'normal')}</div>`;
+}
 function libreCampos(){
   const w=S.wizard;
   return `<div class="field"><label>Comida libre a la semana</label><span class="hint">Un hueco sin menú para comer lo que te apetezca. Ayuda a mantener el plan sin agobios.</span>
     ${radios('libreDia',{'6':{n:'Sábado'},'0':{n:'Domingo'},'no':{n:'No quiero'}},String(w.libreDia))}</div>
-    ${String(w.libreDia)!=='no'?`<div class="field"><label>¿Qué dejas libre?</label>${radios('libreTipo',{comida:{n:'La comida',d:'Mediodía'},cena:{n:'La cena',d:'Noche'},dia:{n:'Todo el día',d:'Sin menú ese día'}},w.libreTipo)}</div>`:''}`;
+    ${String(w.libreDia)!=='no'?`<div class="field"><label>¿Qué dejas libre?</label>${radios('libreTipo',{comida:{n:'La comida',d:'Mediodía'},cena:{n:'La cena',d:'Noche'},dia:{n:'Todo el día',d:'Sin menú ese día'}},w.libreTipo)}</div>`:''}${cocinaCampos()}`;
 }
 function supChips(){
   const w=S.wizard; const edad=parseInt(w.edad||S.cli?.perfil?.edad||0,10); const menor=edad && edad<18;
@@ -1523,7 +1565,7 @@ function supChips(){
   return `<div class="field"><label>Suplementos</label><span class="hint">Marca los que tomas o quieres tomar. Si no marcas nada, el menú no lleva ninguno.</span><div class="chips">${ops.map(([k,n,d])=>`<div class="chip pos"><input type="checkbox" id="sp_${k}" data-arr="suplementos" value="${k}" ${w.suplementos.includes(k)?'checked':''}><label for="sp_${k}" title="${d}">${n}</label></div>`).join('')}</div></div>`;
 }
 const WSTEPS = ['Objetivo','Tus datos','Medidas','Actividad','Alimentación'];
-function wDefaults(){ return {objetivo:'', sexo:'', edad:'', peso:'', altura:'', cintura:'', cadera:'', pierna:'', pecho:'', entrenos:'', trabajo:'sentado', dieta:'omni', intolerancias:[], noGusta:[], noGustaTexto:'', suplementos:[], libreDia:'6', libreTipo:'comida'}; }
+function wDefaults(){ return {objetivo:'', sexo:'', edad:'', peso:'', altura:'', cintura:'', cadera:'', pierna:'', pecho:'', entrenos:'', trabajo:'sentado', dieta:'omni', intolerancias:[], noGusta:[], noGustaTexto:'', suplementos:[], libreDia:'6', libreTipo:'comida', cocina:'normal'}; }
 function numF(id,label,unit,hint=''){ const w=S.wizard; return `<div class="field"><div class="lab-row"><label for="w_${id}">${label}</label>${infoBtn(id)}</div><div class="unit"><input class="inp num" id="w_${id}" data-w="${id}" inputmode="decimal" value="${esc(w[id])}"><span>${unit}</span></div>${hint?`<span class="hint">${hint}</span>`:''}</div>`; }
 function radios(name, opts, cur){ return `<div class="choices">${Object.entries(opts).map(([k,o])=>`<div class="choice"><input type="radio" name="${name}" id="${name}_${k}" value="${k}" data-w="${name}" ${cur===k?'checked':''}><label for="${name}_${k}"><b>${o.n}</b>${o.d?`<small>${o.d}</small>`:''}</label></div>`).join('')}</div>`; }
 // Figura de medidas: silueta frontal neutra + cintas de medir
@@ -1626,7 +1668,7 @@ function validarPaso(st,w){
 async function terminarWizard(){
   const w=S.wizard; const n=k=>r1(parseFloat(String(w[k]).replace(',','.')));
   const f=hoy();
-  const perfil={objetivo:w.objetivo, sexo:w.sexo, edad:Math.round(n('edad')), altura:n('altura'), entrenos:Math.round(n('entrenos')), trabajo:w.trabajo, dieta:w.dieta, intolerancias:w.intolerancias, noGusta:w.noGusta, noGustaTexto:w.noGustaTexto.trim(), suplementos:w.suplementos||[], libre:{dia:String(w.libreDia)==='no'?null:+w.libreDia, tipo:w.libreTipo||'comida'}, ajusteKcal:0};
+  const perfil={objetivo:w.objetivo, sexo:w.sexo, edad:Math.round(n('edad')), altura:n('altura'), entrenos:Math.round(n('entrenos')), trabajo:w.trabajo, dieta:w.dieta, intolerancias:w.intolerancias, noGusta:w.noGusta, noGustaTexto:w.noGustaTexto.trim(), suplementos:w.suplementos||[], libre:{dia:String(w.libreDia)==='no'?null:+w.libreDia, tipo:w.libreTipo||'comida'}, cocina:cocinaDe(w), ajusteKcal:0};
   const mediciones=[{fecha:f, peso:n('peso'), cintura:n('cintura'), cadera:n('cadera'), pierna:n('pierna'), pecho:n('pecho')}];
   const tmp={...S.cli, perfil, mediciones, rechazadas:[]};
   const plan=generarPlan(tmp, f, S.uid+f, miPeriodo());
@@ -1638,6 +1680,7 @@ async function terminarWizard(){
 function indiceHoy(plan){ const d=diffDays(plan.inicio, hoy()); return Math.min(diasPlan(plan)-1, Math.max(0, d)); }
 function vMenu(){
   const c=S.cli, plan=c.plan; if(S.dia===null) S.dia=indiceHoy(plan);
+  if(S.nevera) return vNevera();
   const d=S.dia, tot=totalesDia(plan,d,c.perfil), hi=diffDays(plan.inicio,hoy());
   const prox=proxRevision(plan), falta=diffDays(hoy(),prox);
   const avisoRev = falta<=1 ? `<div class="notice"><b>${falta<0?'Tu revisión está pendiente':'Toca revisión'}</b><p>Pésate y mide tu cintura, cadera, pierna y pecho para ajustar tu siguiente menú.</p><div><button class="btn primary small" data-go="progreso">Registrar medidas</button></div></div>` : '';
@@ -1652,8 +1695,14 @@ function vMenu(){
     if(!r) return `<article class="meal"><header><span class="mtype">${icon(t)}${TIPO_LABEL[t]}</span></header><h3>Plato renovado</h3><p class="prep">Hemos actualizado el recetario y este plato ya no está. Pulsa para elegir uno nuevo.</p><div class="row"><button class="btn small primary" data-swap="${t}">Elegir otro plato</button></div></article>`;
     const f=FD[t];
     let k=0; const lis=r.i.map(([key,g])=>{ const x=redondear(key,g*f); k+=ING[key].k*x.g/100; return `<li><span>${esc(ingNombre(key,c.perfil))}</span><b>${x.txt}</b></li>`; }).join('');
-    return `<article class="meal"><header><span class="mtype">${icon(t)}${TIPO_LABEL[t]}</span><span class="mkcal">${Math.round(k)} kcal</span></header>
-      <h3>${esc(r.n)}</h3><ul class="ings">${lis}</ul><p class="prep">${esc(r.p)}</p>${r.x.length?`<p class="extras">Además: ${esc(r.x.join(', '))}</p>`:''}
+    const sob=esSobras(plan,d,c.perfil), tup=t==='comida' && diaTupper(plan,d,c.perfil) && domingoAntes(plan,d)>=0;
+    const nota = (t==='comida' && sob) ? `<p class="cocina-nota">Cocina el doble: la otra ración es tu cena de hoy. Guárdala en un táper.</p>`
+      : (t==='cena' && sob) ? `<p class="cocina-nota">Ya está hecha: es lo que te sobró de la comida. Calienta esta cantidad y listo.</p>`
+      : tup ? `<p class="cocina-nota">La dejaste hecha el domingo: calienta tu táper y listo.</p>` : '';
+    const tags=`<div class="tags"><span class="tag tiempo">${(t==='cena'&&sob)||tup?'Solo calentar':etiquetaTiempo(r)}</span>${t==='comida'&&sob?'<span class="tag doble">Comida + cena</span>':''}</div>`;
+    return `<article class="meal"><header><span class="mtype">${icon(t)}${TIPO_LABEL[t]}${t==='cena'&&sob?' · sobras':''}</span><span class="mkcal">${Math.round(k)} kcal</span></header>
+      <h3>${esc(r.n)}</h3>${tags}${nota}<ul class="ings">${lis}</ul>${(t==='cena'&&sob)||tup?'':`<p class="prep">${esc(r.p)}</p>`}${r.x.length&&!((t==='cena'&&sob)||tup)?`<p class="extras">Además: ${esc(r.x.join(', '))}</p>`:''}
+      ${(t==='comida'||t==='cena')?`<div class="row"><button class="btn small rapido" data-rapido="${t}">${ICO_RAYO}Hoy no tengo ganas</button></div>`:''}
       <div class="row">${c.perfil.fijos?.[t]===id
         ? `<span class="fijo-tag">Fijo todos los días</span><button class="btn small" data-swap="${t}">Cambiar por otro (todos los días)</button><button class="btn small ghost" data-desfijar="${t}">Quitar fijo</button>`
         : `<button class="btn small" data-swap="${t}">Otra opción</button><button class="btn small ghost" data-fijar="${t}">Fijar todos los días</button><button class="btn small ghost danger" data-nogusta="${t}">No me gusta este plato</button>`}</div></article>`;
@@ -1668,8 +1717,8 @@ function vMenu(){
     <div><b>${tot.C} g</b><span>hidratos</span></div>
     <div><b>${tot.F} g</b><span>grasas</span></div>
   </div>${libreHoy?`<p class="fine">El objetivo de hoy descuenta tu ${lib.tipo==='cena'?'cena':'comida'} libre (${plan.kcal} kcal en un día normal).</p>`:''}`}
-  ${asistenteVisible()?`<div><button class="btn small" data-tab="asistente">¿Dudas con tu menú? Pregunta al asistente</button></div>`:''}
-  <div class="meals">${meals}${tarjetaCreatina(c)}</div>
+  <div class="menu-atajos"><button class="btn small nevera-btn" data-nevera="1"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M5 10h14M8 6v1.5M8 13v3"/></svg>¿Qué hago con lo que tengo?</button><button class="btn small" data-tab="fuera">Hoy como fuera</button>${asistenteVisible()?`<button class="btn small" data-tab="asistente">Pregunta al asistente</button>`:''}</div>
+  <div class="meals">${bloq?'':panelDomingo(plan,d,c.perfil)}${meals}${tarjetaCreatina(c)}</div>
   <p class="fine">Propuesta de menú orientativa, generada automáticamente con tus datos y pensada para personas sanas. No es una dieta ni sustituye a un dietista-nutricionista. Las cantidades son en crudo salvo legumbres de bote. Bebe agua a demanda; café e infusiones sin azúcar, libres. ${falta>1?`Próxima revisión: ${fmtFecha(prox,{weekday:'long',day:'numeric',month:'long'})}.`:''}</p>`;
 }
 const ANIMO = [
@@ -1719,6 +1768,18 @@ function bloqueMensajes(c){
   if(c.comunicaciones!==false) html+=`<div class="cheer"><svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z"/></svg><div class="stack" style="gap:4px"><span class="eyebrow">Para hoy</span><p>${mensajeDelDia(c)}</p></div></div>`;
   return html;
 }
+const ICO_RAYO='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z"/></svg>';
+function panelDomingo(plan,d,pf){
+  if(cocinaDe(pf)!=='domingo' || dowPlan(plan,d)!==0) return '';
+  const dias=[d+1,d+2,d+3].filter(i=>i<plan.dias.length && plan.dias[i]?.comida && !esLibre(plan,i,'comida',pf) && !diaBloqueado(plan,i));
+  if(!dias.length) return '';
+  const items=dias.map(i=>{ const r=RECMAP[plan.dias[i].comida]; if(!r) return ''; const F=factoresDia(plan,i,pf);
+    const lis=r.i.map(([key,g])=>{ const x=redondear(key,g*F.comida); return `<li><span>${esc(ingNombre(key,pf))}</span><b>${x.txt}</b></li>`; }).join('');
+    return `<details class="acc"><summary><span class="sum"><span>${fmtFecha(addDays(plan.inicio,i),{weekday:'long'})}: ${esc(r.n)}</span><small>${etiquetaTiempo(r)}</small><i class="chev-acc" aria-hidden="true"></i></span></summary><div class="acc-body"><ul class="ings">${lis}</ul><p class="prep">${esc(r.p)}</p></div></details>`; }).join('');
+  return `<article class="meal domingo"><header><span class="mtype">${icon('comida')}Cocina del domingo</span></header>
+    <h3>Hoy dejas hechas ${dias.length===1?'la comida':'las comidas'} de ${dias.map(i=>fmtFecha(addDays(plan.inicio,i),{weekday:'long'})).join(', ').replace(/, ([^,]*)$/,' y $1')}</h3>
+    <p class="prep">Cocina cada plato con su cantidad, guárdalo en un táper y a la nevera: aguantan bien 3-4 días. Así entre semana solo calientas.</p>${items}</article>`;
+}
 function tarjetaLibre(t){
   const dia=t==='dia';
   return `<article class="meal libre"><header><span class="mtype">${icon('libre')}${dia?'Día libre':TIPO_LABEL[t]+' libre'}</span></header>
@@ -1748,24 +1809,128 @@ async function fijarPlato(t, id){
   const perfil={...c.perfil, fijos};
   if(await guardarCli({perfil, plan})) toast(id?`${TIPO_LABEL[t]} fijado: se repite todos los días`:`${TIPO_LABEL[t]} ya no está fijo: vuelve a variar cada día`);
 }
+// «Hoy no tengo ganas»: un plato de 10 minutos o sin cocinar, solo para ese día
+async function platoRapido(t){
+  const c=S.cli, plan=structuredClone(c.plan), d=S.dia, actual=plan.dias[d][t];
+  const usados=new Set(TIPOS.map(x=>plan.dias[d][x]));
+  const base=r=>(r.t==='comida'||r.t==='cena') && r.id!==actual && !usados.has(r.id) && recetaPermitida(r,c);
+  let pool=REC.filter(r=>base(r) && r.min<=10);
+  if(pool.length<3) pool=REC.filter(r=>base(r) && r.min<=15);
+  if(!pool.length){ toast('No hay platos rápidos compatibles con tus preferencias.'); return; }
+  pool.sort((a,b)=>densProt(b)-densProt(a));
+  const top=pool.slice(0,Math.min(6,pool.length)); const sig=top[Math.floor(Math.random()*top.length)];
+  ponerPlato(plan,d,t,sig.id,c.perfil);
+  if(await guardarCli({plan})) toast(`Plato rápido: ${sig.n} (${sig.min} min)`);
+}
 async function cambiarPlato(t, rechazar){
   const c=S.cli, plan=structuredClone(c.plan), d=S.dia; const actual=plan.dias[d][t];
   const rech = rechazar ? [...new Set([...(c.rechazadas||[]), actual])] : (c.rechazadas||[]);
   const tmp={...c, rechazadas:rech};
   let pool=REC.filter(r=>r.t===t && r.id!==actual && recetaPermitida(r,tmp));
+  if(t==='comida' && diaTupper(plan,d,c.perfil) && !rechazar){ const pt=pool.filter(r=>r.tup); if(pt.length) pool=pt; }
   if(!pool.length) pool=REC.filter(r=>r.t===t && r.id!==actual && recetaPermitida(r,tmp,true));
   if(!pool.length){ toast('No hay más opciones compatibles para esta comida.'); return; }
   const usados=new Set(TIPOS.map(x=>plan.dias[d][x]));
   const libres=pool.filter(r=>!usados.has(r.id)); const l=libres.length?libres:pool;
   const sig = l[Math.floor(Math.random()*l.length)];
   const fijo=c.perfil.fijos?.[t]===actual;
-  if(rechazar || fijo){ for(const dia of plan.dias){ if(dia[t]===actual) dia[t]=sig.id; } }
-  else plan.dias[d][t]=sig.id;
+  if(rechazar || fijo){
+    // el plato rechazado puede estar también como sobras en la cena (o al revés)
+    const otro = t==='comida' ? 'cena' : t==='cena' ? 'comida' : null;
+    const alt = otro && rechazar ? REC.filter(r=>r.t===otro && r.id!==actual && recetaPermitida(r,tmp)) : [];
+    plan.dias.forEach((dia,i)=>{
+      const eraSobras = dia.cena===dia.comida;
+      if(dia[t]===actual) dia[t]=sig.id;
+      if(otro && dia[otro]===actual){ if(eraSobras && t==='comida') dia.cena=sig.id; else if(alt.length) dia[otro]=alt[(i*7)%alt.length].id; }
+    });
+  }
+  else ponerPlato(plan,d,t,sig.id,c.perfil);
   const patch={plan}; if(rechazar) patch.rechazadas=rech;
   if(fijo || (rechazar && c.perfil.fijos?.[t]===actual)){ const fijos={...c.perfil.fijos}; if(rechazar) delete fijos[t]; else fijos[t]=sig.id; patch.perfil={...c.perfil, fijos}; }
   if(await guardarCli(patch)) toast(rechazar?'Lo quitamos de tus menús':'Plato cambiado');
 }
 
+/* ---------- ¿Qué hago con lo que tengo? ---------- */
+const NEV_FUERA=new Set(['aceite','whey','creatina','miel','salsa_soja','cacao']);
+function neveraSel(){ return new Set(store.get('nevera_'+S.uid)||[]); }
+function vNevera(){
+  const c=S.cli, pf=c.perfil, plan=c.plan, sel=neveraSel(), tipo=S.nevTipo||'comida', d=S.dia;
+  const perm=REC.filter(r=>recetaPermitida(r,c));
+  const usados=new Set(); for(const r of perm) for(const [k] of r.i) if(!NEV_FUERA.has(k)) usados.add(k);
+  const porSec={}; for(const k of usados){ (porSec[ING[k].s] ||= []).push(k); }
+  const chips=ORDEN_S.filter(s=>porSec[s]).map(s=>`<span class="eyebrow" style="margin-top:6px">${SECC[s]}</span><div class="chips">${porSec[s].sort((a,b)=>ING[a].n.localeCompare(ING[b].n,'es')).map(k=>`<div class="chip nev"><input type="checkbox" id="nv_${k}" data-nev="${k}" ${sel.has(k)?'checked':''}><label for="nv_${k}">${esc(ingNombre(k,pf))}</label></div>`).join('')}</div>`).join('');
+  let resultados='';
+  if(S.nevGen && sel.size){
+    const nombre=k=>ingNombre(k,pf).toLowerCase();
+    const res=perm.filter(r=>r.t===tipo).map(r=>{ const keys=[...new Set(r.i.map(([k])=>k).filter(k=>!NEV_FUERA.has(k)))]; const tiene=keys.filter(k=>sel.has(k)); return {r,keys,tiene,falta:keys.filter(k=>!sel.has(k)), s:tiene.length/keys.length+(sel.has(keys[0])?0.35:0)}; })
+      .filter(x=>x.tiene.length).sort((a,b)=>b.s-a.s || a.falta.length-b.falta.length || a.r.min-b.r.min).slice(0,6);
+    const bloqueado = diaBloqueado(plan,d) || esLibre(plan,d,tipo,pf);
+    const diaTxt = d===indiceHoy(plan) ? 'hoy' : 'el '+fmtFecha(addDays(plan.inicio,d),{weekday:'long'});
+    const cards=res.map(({r,tiene,falta})=>`<article class="meal"><header><span class="mtype">${icon(tipo)}${TIPO_LABEL[tipo]}</span><span class="mkcal">${etiquetaTiempo(r)}</span></header>
+      <h3>${esc(r.n)}</h3>
+      <p class="prep"><b>Tienes:</b> ${esc(tiene.map(nombre).join(', '))}</p>
+      ${falta.length?`<p class="prep"><b>Te falta:</b> ${esc(falta.map(nombre).join(', '))}</p>`:'<p class="prep"><b>¡Lo tienes todo!</b></p>'}
+      <div class="row"><button class="btn small primary" data-nevput="${r.id}" ${bloqueado||plan.dias[d]?.[tipo]===r.id?'disabled':''}>${plan.dias[d]?.[tipo]===r.id?'Ya está en tu menú':`Ponerlo en mi ${TIPO_LABEL[tipo].toLowerCase()} de ${diaTxt}`}</button></div></article>`).join('');
+    resultados=`<div class="stack" id="nevRes"><span class="eyebrow">Resultado</span><h2>Con lo que tienes puedes hacer</h2>
+      ${cards?`<div class="meals">${cards}</div>`:`<p class="prep">Con eso no sale ningún plato de ${TIPO_LABEL[tipo].toLowerCase()}. Marca algo más o prueba con otra comida.</p>`}
+      ${bloqueado?`<p class="fine">Ese día la ${TIPO_LABEL[tipo].toLowerCase()} es libre o no está disponible: elige otro día en tu menú para ponerla.</p>`:''}</div>`;
+  }
+  return `<div class="stack"><span class="eyebrow">Con lo que tienes en casa</span><h1>¿Qué hago con lo que tengo?</h1>
+    <p class="lead">Marca todo lo que tienes en la nevera y en la despensa, elige para qué comida es y pulsa «Ver qué puedo hacer». Las cantidades se ajustan solas a tu objetivo.</p></div>
+  <div><button class="btn small ghost" data-nevcerrar="1">← Volver a mi menú</button></div>
+  <div class="panel"><div class="row" style="justify-content:space-between;align-items:center"><h3>1. Marca lo que tienes</h3>${sel.size?`<button class="btn small ghost" data-nevlimpiar="1">Borrar todo</button>`:''}</div>${chips}</div>
+  <div class="panel"><h3>2. ¿Para qué comida?</h3><div class="filters" role="group" aria-label="Comida">${TIPOS.map(t=>`<button data-nevtipo="${t}" aria-pressed="${t===tipo}">${TIPO_LABEL[t]}</button>`).join('')}</div>
+    <div class="row"><button class="btn primary nevera-gen" id="nevGenBtn" data-nevgen="1" ${sel.size?'':'disabled'}>${textoNevGen(sel.size)}</button></div></div>
+  ${resultados}`;
+}
+function textoNevGen(n){ return n ? `Ver qué puedo hacer (${n} ${n===1?'ingrediente':'ingredientes'})` : 'Marca al menos un ingrediente'; }
+async function neveraPoner(id){
+  const c=S.cli, plan=structuredClone(c.plan), t=S.nevTipo||'comida';
+  ponerPlato(plan,S.dia,t,id,c.perfil);
+  if(await guardarCli({plan})){ S.nevera=false; render(); toast(`${RECMAP[id].n}: en tu ${TIPO_LABEL[t].toLowerCase()}`); irArriba(); }
+}
+/* ---------- Guía para comer fuera ---------- */
+function vFuera(){
+  const sec=(tit,items,cls='')=>`<div class="panel ${cls}"><h3>${tit}</h3><ul class="tips">${items.map(x=>`<li>${x}</li>`).join('')}</ul></div>`;
+  return `<div class="stack"><span class="eyebrow">Comer fuera</span><h1>Qué pedir sin salirte del plan</h1>
+    <p class="lead">Salir de tapas o comer de menú es parte de la vida. Con estos trucos puedes hacerlo casi siempre sin notarlo en tu progreso.</p></div>
+  <div class="notice ok"><b>La regla rápida</b><p>Plancha, horno o cocido mejor que frito o rebozado. Una ración de proteína y algo de verdura. Pan, una pieza. Y para beber, agua o algo sin azúcar.</p></div>
+  ${sec('De tapas: estas encajan',[
+    '<b>Pescado o choco a la plancha</b>: emperador, dorada, calamar, sepia, pez espada…',
+    '<b>Gambas o langostinos</b> cocidos o a la plancha.',
+    '<b>Boquerones en vinagre</b>, mejor sin abusar del pan para mojar.',
+    '<b>Salmorejo o gazpacho</b>, con huevo y jamón por encima.',
+    '<b>Espinacas con garbanzos</b> o una tapa de lentejas o de puchero.',
+    '<b>Montadito de lomo o de pollo</b> a la plancha, o un pinchito moruno.',
+    '<b>Champiñones o setas a la plancha</b>, pimientos asados, alcachofas.',
+    '<b>Ensalada mixta, pipirrana o tomate aliñado</b> con atún o melva.',
+    '<b>Jamón ibérico o queso</b>, una tapa para compartir.'])}
+  ${sec('De tapas: mejor para compartir o de vez en cuando',[
+    'Pescaíto frito, flamenquín, croquetas, san jacobos y todo lo rebozado.',
+    'Patatas bravas o con alioli, ensaladilla con mucha mayonesa, chicharrones.',
+    'Si te apetece, pide una ración para todos y picas un poco: no hace falta prohibirlo.'])}
+  ${sec('Desayuno en el bar',[
+    '<b>Tostada o mollete con tomate y aceite</b>, mejor con jamón o pavo, y café con leche.',
+    'Si no vas a entrenar ese día, mejor media tostada que entera.',
+    'Churros, bollería o zumo de bote, que no sea a diario.'])}
+  ${sec('Menú del día',[
+    '<b>De primero:</b> ensalada, gazpacho o salmorejo, legumbre o crema de verduras.',
+    '<b>De segundo:</b> carne o pescado a la plancha. Pide ensalada o verdura en vez de patatas fritas (casi siempre te lo cambian).',
+    '<b>De postre:</b> fruta, yogur o café.',
+    'Pan, una pieza. Y si el primero es contundente (lentejas, potaje), el segundo que sea ligero.'])}
+  ${sec('Comida rápida',[
+    '<b>Hamburguesa:</b> sencilla, sin doble de carne ni salsas extra, y ensalada mejor que patatas.',
+    '<b>Pizza:</b> 2 o 3 porciones con una ensalada al lado.',
+    '<b>Kebab:</b> mejor en plato con ensalada que en durum, y con poca salsa.'])}
+  ${sec('Bebidas',[
+    'Agua, refrescos zero, cerveza sin alcohol o tinto de verano con gaseosa zero.',
+    'Si bebes alcohol, una caña o una copa de vino. A partir de ahí, mejor pasarte al sin.'])}
+  ${sec('Y al día siguiente',[
+    'Vuelve a tu menú tal cual: no hace falta compensar comiendo menos ni entrenando de más.',
+    'Si comes fuera muchas veces a la semana, cuéntanoslo en el centro y lo tenemos en cuenta.',
+    `${(typeof asistenteVisible==='function'&&asistenteVisible())?'¿Dudas con un sitio concreto? Pregúntale al asistente qué pedir.':'¿Dudas con un sitio concreto? Pregúntanos en clase.'}`],'')}
+  <p class="fine">Consejos orientativos para personas sanas. No sustituyen a un dietista-nutricionista.</p>`;
+}
 /* ---- Lista de la compra ---- */
 // Marcas de la compra: qué cantidad había al tachar cada producto y qué productos había en la lista
 function claveCompra(plan,sem){ return 'compra_'+S.uid+'_'+plan.creado+'_'+sem; }
@@ -2046,6 +2211,7 @@ function vPerfil(){
     <div><span class="eyebrow">Dieta</span><p>${DIETAS[pf.dieta].n}</p></div>
     <div><span class="eyebrow">Intolerancias</span><p>${pf.intolerancias.length?pf.intolerancias.map(k=>INTOL[k]).join(', '):'Ninguna'}</p></div>
     <div><span class="eyebrow">Comida libre</span><p>${textoLibre(pf)}</p></div>
+    <div><span class="eyebrow">Cocina</span><p>${COCINA[cocinaDe(pf)].n}</p></div>
     ${Object.keys(pf.fijos||{}).length?`<div><span class="eyebrow">Comidas fijas</span><p>${Object.entries(pf.fijos).map(([t,id])=>`${TIPO_LABEL[t]}: ${esc(RECMAP[id]?.n||'—')}`).join('<br>')}</p></div>`:''}
     <div><span class="eyebrow">Suplementos</span><p>${(pf.suplementos||[]).length?pf.suplementos.map(k=>k==='creatina'?'Creatina':'Proteína en polvo').join(', '):'Ninguno'}</p></div>
     <div style="grid-column:1/-1"><span class="eyebrow">No le gusta</span><p>${[...pf.noGusta.map(k=>ING[k]?.n), pf.noGustaTexto].filter(Boolean).map(esc).join(', ')||'Nada indicado'}</p></div>
@@ -2067,7 +2233,7 @@ async function guardarPerfil(){
   if(isNaN(e)||e<0||e>14){ $('#pErr').textContent='Entrenamientos: introduce un valor entre 0 y 14.'; return; }
   const rech=[...document.querySelectorAll('[data-rech]')].filter(x=>x.checked).map(x=>x.dataset.rech);
   const cambioObj = w.objetivo!==c.perfil.objetivo;
-  const perfil={...c.perfil, objetivo:w.objetivo, entrenos:e, trabajo:w.trabajo, dieta:w.dieta, intolerancias:w.intolerancias, noGusta:w.noGusta, noGustaTexto:w.noGustaTexto.trim(), suplementos:w.suplementos||[], libre:{dia:String(w.libreDia)==='no'?null:+w.libreDia, tipo:w.libreTipo||'comida'}, ajusteKcal: cambioObj?0:(c.perfil.ajusteKcal||0)};
+  const perfil={...c.perfil, objetivo:w.objetivo, entrenos:e, trabajo:w.trabajo, dieta:w.dieta, intolerancias:w.intolerancias, noGusta:w.noGusta, noGustaTexto:w.noGustaTexto.trim(), suplementos:w.suplementos||[], libre:{dia:String(w.libreDia)==='no'?null:+w.libreDia, tipo:w.libreTipo||'comida'}, cocina:cocinaDe(w), ajusteKcal: cambioObj?0:(c.perfil.ajusteKcal||0)};
   const tmp={...c, perfil, rechazadas:rech};
   const plan=generarPlan(tmp, c.plan.inicio, S.uid+Date.now(), semanasPlan(c.plan));
   if(await guardarCli({perfil, rechazadas:rech, plan})){ S.editPerfil=false; S.wizard=null; S.dia=null; toast('Preferencias guardadas. Menú actualizado.'); }
@@ -2554,7 +2720,14 @@ document.addEventListener('click', async e=>{
   if(t.id==='activarAvisos'){ t.disabled=true; await activarAvisos(); return; }
   if(t.id==='desactivarAvisos'){ t.disabled=true; await desactivarAvisos(); return; }
   if(t.id==='probarEnvios'){ t.disabled=true; const r=await llamarFuncion({tipo:'prueba'}); t.disabled=false; toast(r.error?'No se ha podido probar: '+r.error : `Correo: ${r.correo?'enviado a tu Gmail':'NO enviado (revisa GMAIL_USER y la contraseña de aplicación)'} · Notificaciones: ${r.push||0}`); return; }
-  if(t.dataset.tab){ S.tab=t.dataset.tab; S.medForm=false; S.editPerfil=false; S.wizard=null; render(); irArriba(); return; }
+  if(t.dataset.tab){ S.tab=t.dataset.tab; S.medForm=false; S.editPerfil=false; S.wizard=null; S.nevera=false; render(); irArriba(); return; }
+  if(t.dataset.nevera){ S.nevera=true; S.nevGen=false; render(); irArriba(); return; }
+  if(t.dataset.nevcerrar){ S.nevera=false; render(); irArriba(); return; }
+  if(t.dataset.nevtipo){ S.nevTipo=t.dataset.nevtipo; render(); return; }
+  if(t.dataset.nevgen){ S.nevGen=true; render(); document.getElementById('nevRes')?.scrollIntoView({behavior:'smooth',block:'start'}); return; }
+  if(t.dataset.nevlimpiar){ store.set('nevera_'+S.uid,[]); S.nevGen=false; render(); return; }
+  if(t.dataset.nevput){ t.disabled=true; await neveraPoner(t.dataset.nevput); return; }
+  if(t.dataset.rapido){ t.disabled=true; await platoRapido(t.dataset.rapido); return; }
   if(t.dataset.go){ S.tab=t.dataset.go; S.medForm=true; render(); irArriba(); return; }
   if(t.dataset.dia!==undefined){ S.dia=+t.dataset.dia; render(); return; }
   if(t.id==='irPrecios'){ S.accOpen.ajPrecios=true; S.tab='ajustes'; render(); document.querySelector('[data-acc="ajPrecios"]')?.scrollIntoView({behavior:'smooth'}); return; }
@@ -2629,6 +2802,8 @@ document.addEventListener('change', e=>{
     if(el.checked) m.t[el.dataset.item]=+el.dataset.g; else delete m.t[el.dataset.item];
     m.v=[...document.querySelectorAll('[data-item]')].map(x=>x.dataset.item); if(!Object.keys(m.t).length) m.v=null;
     store.set(k,m); render(); return; }
+  if(el.dataset.nev){ const sel=neveraSel(); if(el.checked) sel.add(el.dataset.nev); else sel.delete(el.dataset.nev); store.set('nevera_'+S.uid,[...sel]);
+    S.nevGen=false; document.getElementById('nevRes')?.remove(); const bt=document.getElementById('nevGenBtn'); if(bt){ bt.disabled=!sel.size; bt.textContent=textoNevGen(sel.size); } return; }
   if(!S.wizard) return;
   if(el.dataset.arr){ const a=el.dataset.arr; S.wizard[a] = el.checked ? [...new Set([...S.wizard[a], el.value])] : S.wizard[a].filter(x=>x!==el.value); }
   else if(el.dataset.w && el.type==='radio'){ S.wizard[el.dataset.w]=el.value; if(el.dataset.w==='libreDia'){ if(!S.editPerfil) store.set('wiz_'+S.uid,S.wizard); render(); return; } }
