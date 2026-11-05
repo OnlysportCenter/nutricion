@@ -1453,6 +1453,9 @@ function tarifas(){ const t=S.centro?.tarifas; return Array.isArray(t)&&t.length
 function nombreTarifa(tipo){ return tipo==='oferta' ? oferta().nombre : tipo==='prueba' ? 'Prueba gratuita' : (tarifas().find(t=>t.id===tipo)?.n || S.centro?.tarifasBorradas?.[tipo] || 'Plan'); }
 function diasPrueba(){ return Math.max(1, +(S.centro?.diasPrueba)||14); }
 function pruebaOn(){ return S.centro?.pruebaActiva===true; }
+// Cada socio puede pedir la prueba gratuita una sola vez; después solo el administrador puede volver a dársela
+function usoPrueba(ap){ return !!(ap?.pruebaUsada || ap?.tipo==='prueba' || (ap?.pagos||[]).some(p=>p.tipo==='prueba')); }
+function pruebaDisponible(){ return pruebaOn() && !usoPrueba(S.cli ? miAprob() : null); }
 /* ---------- Oferta de lanzamiento (con plazas limitadas) ---------- */
 const OFERTA_DEF={activa:false, nombre:'Oferta de lanzamiento', precio:5, meses:1, plazas:20, usadas:0};
 function oferta(){ return {...OFERTA_DEF, ...(S.centro?.oferta||{})}; }
@@ -1476,7 +1479,7 @@ function acceso(ap){
 }
 function bloqueTarifas(){
   const t=tarifas(); const base=t.find(x=>+x.meses===1)?.precio; const mejor=t.reduce((m,x)=>(x.precio/x.meses < m.precio/m.meses ? x : m), t[0]);
-  return `${ofertaOn()?`<div class="oferta-card" style="margin-bottom:10px">${ofertaHtml()}</div>`:''}${pruebaOn()?`<div class="trial"><b>Prueba gratis ${diasPrueba()} días</b><span>Pídela en el centro y prueba la app completa, sin compromiso.</span></div>`:''}
+  return `${ofertaOn()?`<div class="oferta-card" style="margin-bottom:10px">${ofertaHtml()}</div>`:''}${pruebaDisponible()?`<div class="trial"><b>Prueba gratis ${diasPrueba()} días</b><span>Pídela en el centro y prueba la app completa, sin compromiso.</span></div>`:''}
   <div class="tarifas">${t.map(x=>{ const mes=x.precio/x.meses, ahorro=base?base*x.meses-x.precio:0;
     return `<div class="tarifa">${x===mejor&&t.length>1?'<span class="badge">Mejor precio</span>':''}<span class="eyebrow">${esc(x.n)}</span><b class="num">${fmtEurC(+x.precio)}</b><span>${+x.meses===1?'al mes':`${+x.meses} meses · <span style="white-space:nowrap">${fmtEurC(mes)}/mes</span>`}</span>${ahorro>0.5?`<em>Ahorras ${fmtEurC(ahorro)}</em>`:''}</div>`; }).join('')}</div>
   <p class="fine">Precios para socios de ${esc(S.centro?.marca||'Onlysport')}. Se paga en el centro y lo activamos al momento. El pago es por adelantado y no se devuelve una vez hecho, salvo que el centro no pueda prestar el servicio.</p>`;
@@ -1502,13 +1505,13 @@ document.addEventListener('toggle', e=>{ const d=e.target; if(d?.dataset?.acc) S
 function bloqueFaqs(pref='f'){ const l=faqs(); return l.length ? l.map((f,i)=>`<details class="faq" data-acc="${pref}${i}" ${accAbierto(pref+i)}><summary>${esc(f.q)}</summary><p>${esc(f.a).replace(/\n/g,'<br>')}</p></details>`).join('') : '<p class="prep">Aún no hay preguntas.</p>'; }
 function bloqueInfo(abrirTarifas=false, conTarifas=true){
   return `<div class="info-acc">
-    ${conTarifas?`<details class="acc" data-acc="tarifas" ${accAbierto('tarifas',abrirTarifas)}><summary><span class="sum"><span>Tarifas</span><small>Desde ${fmtEurC(Math.min(...tarifas().map(t=>t.precio/t.meses)))}/mes${pruebaOn()?' · prueba gratis':''}</small><i class="chev-acc" aria-hidden="true"></i></span></summary><div class="acc-body">${bloqueTarifas()}</div></details>`:''}
+    ${conTarifas?`<details class="acc" data-acc="tarifas" ${accAbierto('tarifas',abrirTarifas)}><summary><span class="sum"><span>Tarifas</span><small>Desde ${fmtEurC(Math.min(...tarifas().map(t=>t.precio/t.meses)))}/mes${pruebaDisponible()?' · prueba gratis':''}</small><i class="chev-acc" aria-hidden="true"></i></span></summary><div class="acc-body">${bloqueTarifas()}</div></details>`:''}
     <details class="acc" data-acc="faqs" ${accAbierto('faqs')}><summary><span class="sum"><span>Preguntas frecuentes</span><small>${faqs().length} respuestas</small><i class="chev-acc" aria-hidden="true"></i></span></summary><div class="acc-body faqs">${bloqueFaqs()}</div></details>
   </div>`;
 }
-function interesDef(){ return ofertaOn() ? 'oferta' : pruebaOn() ? 'prueba' : (tarifas().find(t=>+t.meses===1)||tarifas()[0])?.id; }
+function interesDef(){ return ofertaOn() ? 'oferta' : pruebaDisponible() ? 'prueba' : (tarifas().find(t=>+t.meses===1)||tarifas()[0])?.id; }
 function interesOk(x){ return opcionesInteres().some(o=>o.id===x) ? x : interesDef(); }
-function opcionesInteres(){ return [...(ofertaOn()?[{id:'oferta',n:oferta().nombre,d:'',oferta:true}]:[]), ...(pruebaOn()?[{id:'prueba',n:'Prueba gratis',d:`${diasPrueba()} días sin compromiso`}]:[]), ...tarifas().map(t=>({id:t.id,n:t.n,d:`${fmtEurC(+t.precio)}${+t.meses===1?' al mes':` · ${+t.meses} meses`}`, t}))]; }
+function opcionesInteres(){ return [...(ofertaOn()?[{id:'oferta',n:oferta().nombre,d:'',oferta:true}]:[]), ...(pruebaDisponible()?[{id:'prueba',n:'Prueba gratis',d:`${diasPrueba()} días sin compromiso`}]:[]), ...tarifas().map(t=>({id:t.id,n:t.n,d:`${fmtEurC(+t.precio)}${+t.meses===1?' al mes':` · ${+t.meses} meses`}`, t}))]; }
 function campoInteres(sel, titulo='¿Con qué quieres empezar?'){ sel=interesOk(sel);
   const T=tarifas(), base=T.find(x=>+x.meses===1)?.precio, mejor=T.length>1 ? T.reduce((m,x)=>(x.precio/x.meses < m.precio/m.meses ? x : m), T[0]) : null;
   const tick='<i class="tick" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i>';
@@ -1541,7 +1544,7 @@ function avisoFinPlan(){
 function clienteActivo(){ return !!(consOk(S.cli) && acceso(miAprob()).ok); }
 function tabsDisponibles(){
   const t=[];
-  if(clienteActivo() && S.cli.perfil && S.cli.plan) t.push(['menu','Mi menú'],['compra','Lista de la compra'],['dulces','Dulces'],['fuera','Comer fuera'],['progreso','Progreso'],...(asistenteVisible()?[['asistente','Asistente']]:[]),['faq','Preguntas'],['perfil','Mis datos']);
+  if(clienteActivo() && S.cli.perfil && S.cli.plan) t.push(['menu','Mi menú'],['compra','Lista de la compra'],...(asistenteVisible()?[['asistente','Asistente']]:[]),['progreso','Progreso'],['dulces','Dulces'],['fuera','Comer fuera'],['faq','Preguntas'],['perfil','Mis datos']);
   else t.push(['inicio', S.admin && !S.cli ? 'Mi cuenta' : 'Inicio']);
   if(S.admin) t.push(['panel','Clientes'],['ajustes','Ajustes'],['web','Web']);
   return t;
@@ -1638,7 +1641,7 @@ function vConsentimiento(){
 function vPendiente(){
   const a=acceso(miAprob()), n=esc(S.cli.nombre);
   const T={
-    pend:['Cuenta creada','Esperando confirmación del centro',`Hola, ${n}. ${pruebaOn()?`Pide en el centro tu <b>prueba gratuita de ${diasPrueba()} días</b> o contrata tu tarifa.`:'Contrata tu tarifa en el centro.'} En cuanto lo activemos, esta página se abrirá sola y podrás hacer el cuestionario.`],
+    pend:['Cuenta creada','Esperando confirmación del centro',`Hola, ${n}. ${pruebaDisponible()?`Pide en el centro tu <b>prueba gratuita de ${diasPrueba()} días</b> o contrata tu tarifa.`:'Contrata tu tarifa en el centro.'} En cuanto lo activemos, esta página se abrirá sola y podrás hacer el cuestionario.`],
     off:['Acceso pausado','Tu acceso está pausado','Habla con el centro para reactivarlo. Tus datos y tu progreso siguen guardados.'],
     prueba_fin:['Prueba terminada','Tu prueba gratuita ha terminado',`Esperamos que te haya gustado, ${n}. Para seguir con tu plan, contrata una tarifa en el centro. En cuanto lo registremos recuperas tu menú y todo tu progreso.`],
     caducado:['Plan terminado','Tu plan ha terminado',`Tu plan terminó el ${a.hasta?fmtFecha(a.hasta,{day:'numeric',month:'long'}):''}. Renuévalo en el centro y recuperas al momento tu menú y todo tu progreso.`]
@@ -2415,8 +2418,9 @@ function vPanel(){
       <div class="row">
         ${c.renovacion?`<span class="meta" style="flex-basis:100%;color:var(--good)"><b>Quiere renovar: ${esc(nombreInteres(c.renovacion.tipo))}, paga por ${esc(METODOS[c.renovacion.metodo]||c.renovacion.metodo)}</b> · avisó el ${fmtFecha(String(c.renovacion.fecha).slice(0,10),{day:'numeric',month:'short'})}. Cuando cobres, pulsa Registrar pago.</span>`:''}
         ${c.interes&&!ap?.hasta&&a.k==='pend'?`<span class="meta" style="flex-basis:100%">Ha pedido: <b>${esc(nombreInteres(c.interes))}</b></span>`:''}
-        ${a.k==='pend'&&pruebaOn()&&!ap?.pruebaUsada?`<button class="btn small ${c.interes==='prueba'?'primary':''}" data-prueba="${c.id}">Activar prueba gratis (${diasPrueba()} días)</button>`:''}
-        <button class="btn small ${a.k==='pend'&&pruebaOn()&&c.interes==='prueba'?'':'primary'}" data-pagoabrir="${c.id}">${a.k==='activo'?'Renovar':'Registrar pago'}</button>
+        ${pruebaOn()&&usoPrueba(ap)&&a.k!=='prueba'?`<span class="meta" style="flex-basis:100%">Ya usó su prueba gratuita${ap?.pruebaDesde?' (desde el '+fmtFecha(ap.pruebaDesde,{day:'numeric',month:'short'})+')':''}: no puede volver a pedirla. Si quieres, se la puedes dar tú.</span>`:''}
+        ${pruebaOn()&&['pend','caducado','prueba_fin','off'].includes(a.k)?`<button class="btn small ${a.k==='pend'&&c.interes==='prueba'&&!usoPrueba(ap)?'primary':''}" data-prueba="${c.id}">${usoPrueba(ap)?'Dar otra prueba gratis':'Activar prueba gratis'} (${diasPrueba()} días)</button>`:''}
+        <button class="btn small ${a.k==='pend'&&pruebaOn()&&c.interes==='prueba'&&!usoPrueba(ap)?'':'primary'}" data-pagoabrir="${c.id}">${a.k==='activo'?'Renovar':'Registrar pago'}</button>
         ${ok?`<button class="btn small" data-desactivar="${c.id}">Desactivar</button>`:''}
         ${a.k==='off'?`<button class="btn small" data-aprobar="${c.id}">Reactivar</button>`:''}
         <button class="btn small ghost danger" data-borrar="${c.id}">Borrar cliente</button>
@@ -2853,7 +2857,7 @@ document.addEventListener('click', async e=>{
   if(t.dataset.dia!==undefined){ S.dia=+t.dataset.dia; render(); return; }
   if(t.id==='irPrecios'){ S.accOpen.ajPrecios=true; S.tab='ajustes'; render(); document.querySelector('[data-acc="ajPrecios"]')?.scrollIntoView({behavior:'smooth'}); return; }
   if(t.id==='preciosOk'){ t.disabled=true; await guardarCentro({preciosFecha:hoy()},'Precios marcados como revisados'); return; }
-  if(t.dataset.prueba){ t.disabled=true; await setAprob(t.dataset.prueba,{activo:true, tipo:'prueba', desde:hoy(), hasta:addDays(hoy(),diasPrueba()-1), pruebaUsada:true},`Prueba activada hasta el ${fmtFecha(addDays(hoy(),diasPrueba()-1),{day:'numeric',month:'long'})}`); return; }
+  if(t.dataset.prueba){ t.disabled=true; await setAprob(t.dataset.prueba,{activo:true, tipo:'prueba', desde:hoy(), hasta:addDays(hoy(),diasPrueba()-1), pruebaUsada:true, pruebaDesde:hoy()},`Prueba activada hasta el ${fmtFecha(addDays(hoy(),diasPrueba()-1),{day:'numeric',month:'long'})}`); return; }
   if(t.dataset.pagoabrir){ S.pago = S.pago===t.dataset.pagoabrir && !S.pagoCambio ? null : t.dataset.pagoabrir; S.pagoCambio=false; S.borrarPago=null; render(); return; }
   if(t.dataset.pagar){ t.disabled=true; const [id,tipo]=t.dataset.pagar.split('|'); await registrarPago(id,tipo,!!S.pagoCambio); return; }
   if(t.dataset.deshacerpago){ t.disabled=true; await deshacerPago(t.dataset.deshacerpago); return; }
