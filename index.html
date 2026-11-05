@@ -890,19 +890,25 @@ function domingoAntes(plan,d){ for(let i=d-1; i>=0 && i>=d-3; i--) if(dowPlan(pl
 // Cambia un plato de un día; si la cena de ese día eran las sobras de la comida, la cena sigue a la comida
 function ponerPlato(plan,d,t,id,pf){ const di=plan.dias[d], old=di[t]; di[t]=id; if(t==='comida' && di.cena===old && diaSobras(plan,d,pf)) di.cena=id; }
 
-const TIPOS = ['desayuno','comida','merienda','cena'];
-const REPARTO = {desayuno:.25, comida:.35, merienda:.12, cena:.28};
+const TIPOS = ['desayuno','media','comida','merienda','cena'];
+// Reparto de las calorías del día. La media mañana es opcional: si el socio la toma, sale del desayuno
+const REPARTO = {desayuno:.25, media:.09, comida:.35, merienda:.12, cena:.28};
+function mediaOn(pf){ return pf?.media===true; }
+function tiposDe(pf){ return TIPOS.filter(t=>t!=='media' || mediaOn(pf)); }
+function tipoRec(t){ return t==='media' ? 'merienda' : t; }
+function reparto(t,pf){ return (t==='desayuno' && mediaOn(pf)) ? REPARTO.desayuno-REPARTO.media : REPARTO[t]; }
 const ICON = {
   desayuno:'<path d="M5 11h12v3a5 5 0 0 1-5 5h-2a5 5 0 0 1-5-5z"/><path d="M17 12h1.5a2 2 0 0 1 0 4H17"/><path d="M9 4c0 1.2-1 1.8-1 3M13 4c0 1.2-1 1.8-1 3"/>',
   comida:'<circle cx="12" cy="13" r="7"/><circle cx="12" cy="13" r="3.5"/><path d="M3 4v5M5 4v5M3 9h2M4 9v11M21 4c-1.5 1-2 3-2 5h2v11"/>',
   merienda:'<path d="M12 7c-3-2-7 0-7 5s3 8 5 8c1 0 1.5-.5 2-.5s1 .5 2 .5c2 0 5-3 5-8s-4-7-7-5z"/><path d="M12 7c0-2 1-3 3-4"/>',
   cena:'<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
+  media:'<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4L6 18M18 6l1.4-1.4"/>',
   libre:'<path d="M12 21s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.6-7 10-7 10z"/>',
   dulce:'<path d="M4 13h16l-1.5 7h-13z"/><path d="M6 13c0-3.5 2.7-6 6-6s6 2.5 6 6"/><path d="M12 7V4"/><circle cx="12" cy="3" r="1"/>',
   sup:'<rect x="7" y="3" width="10" height="4" rx="1"/><path d="M8 7h8v12a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2z"/><path d="M8 12h8"/>'
 };
 const icon = k => `<span class="micon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ICON[k]}</svg></span>`;
-const TIPO_LABEL = {desayuno:'Desayuno', comida:'Comida', merienda:'Merienda', cena:'Cena'};
+const TIPO_LABEL = {desayuno:'Desayuno', media:'Media mañana', comida:'Comida', merienda:'Merienda', cena:'Cena'};
 
 const OBJETIVOS = {
   perder_peso:{n:'Perder peso', d:'Bajar en la báscula de forma sostenida', adj:-0.20, pk:2.0},
@@ -968,8 +974,9 @@ function recetaPermitida(r, cli, relajar=false){
 function elegibles(cli){
   const out={};
   for(const t of TIPOS){
-    let l=REC.filter(r=>r.t===t && recetaPermitida(r,cli));
-    if(l.length<2) l=REC.filter(r=>r.t===t && recetaPermitida(r,cli,true));
+    const tt=tipoRec(t);
+    let l=REC.filter(r=>r.t===tt && recetaPermitida(r,cli));
+    if(l.length<2) l=REC.filter(r=>r.t===tt && recetaPermitida(r,cli,true));
     out[t]=l;
   }
   return out;
@@ -1015,6 +1022,7 @@ function generarPlan(cli, inicio, semilla, semanas=2){
   for(let d=0; d<7*Math.max(1,Math.min(4,semanas||2)); d++){
     const dia={};
     for(const t of TIPOS){
+      if(t==='media' && !mediaOn(pfG)) continue;
       if(t==='cena' && dia.comida && diaSobras(pseudo,d,pfG) && !pfG.fijos?.cena && !esLibre(pseudo,d,'comida',pfG) && !esLibre(pseudo,d,'cena',pfG)){ dia.cena=dia.comida; continue; }
       const kk = (t==='comida' && diaTupper(pseudo,d,pfG) && orden.comidaT.length>=3) ? 'comidaT' : t;
       const l=orden[kk]; if(!l.length){ dia[t]=null; continue; }
@@ -1026,8 +1034,8 @@ function generarPlan(cli, inicio, semilla, semanas=2){
       const k0=pos[kk]%l.length; let mejor=k0, mejorS=-1e9;
       for(let j=0;j<Math.min(3,l.length);j++){
         const k=(pos[kk]+j)%l.length, r=RECMAP[l[k]];
-        const rep = t==='cena' && dia.comida && l.length>2 && prin(l[k])===prin(dia.comida);
-        const dv=densProt(r)-densObj, s=(dv<0?(t==='merienda'?0.6:2)*dv:-0.5*dv) - (rep?1:0) - j*0.004;
+        const rep = (t==='cena' && dia.comida && l.length>2 && prin(l[k])===prin(dia.comida)) || (t==='merienda' && dia.media===l[k]);
+        const dv=densProt(r)-densObj, s=(dv<0?(t==='merienda'||t==='media'?0.6:2)*dv:-0.5*dv) - (rep?1:0) - j*0.004;
         if(s>mejorS){ mejorS=s; mejor=k; }
       }
       [l[k0],l[mejor]]=[l[mejor],l[k0]];
@@ -1051,8 +1059,8 @@ const fClamp=x=>Math.min(F_MAX, Math.max(F_MIN, x));
 function kcalRacion(r,f){ let k=0; for(const [key,g] of r.i) k+=ING[key].k*redondear(key,g*f).g/100; return k; }
 function factoresDia(plan,d,pf){
   const meals=recetasDelDia(plan,d,pf); const F={}; if(!meals.length) return F;
-  const target=objetivoDia(plan,d,pf); const share=meals.reduce((a,[t])=>a+REPARTO[t],0);
-  for(const [t,r] of meals) F[t]=fClamp(target*REPARTO[t]/share/r.k);
+  const target=objetivoDia(plan,d,pf); const share=meals.reduce((a,[t])=>a+reparto(t,pf),0);
+  for(const [t,r] of meals) F[t]=fClamp(target*reparto(t,pf)/share/r.k);
   const total=()=>meals.reduce((a,[t,r])=>a+kcalRacion(r,F[t]),0);
   let best={...F}, bestErr=Math.abs(target-total());
   // 1) Escalar todas las comidas a la vez (con amortiguación) y quedarse con el mejor reparto
@@ -1088,7 +1096,7 @@ function libreDe(pf){ const l=pf?.libre; return (l && l.dia!=null && l.dia!=='no
 function esLibre(plan,d,t,pf){ const l=libreDe(pf); if(!l) return false; return parseISO(addDays(plan.inicio,d)).getDay()===l.dia && (l.tipo==='dia' || l.tipo===t); }
 function diaLibre(plan,d,pf){ const l=libreDe(pf); return !!l && parseISO(addDays(plan.inicio,d)).getDay()===l.dia; }
 function textoLibre(pf){ const l=libreDe(pf); if(!l) return 'Sin comida libre'; return (l.tipo==='dia'?'Día libre':l.tipo==='cena'?'Cena libre':'Comida libre')+' los '+DIAS_SEM[l.dia]+(l.dia===6||l.dia===0?'s':''); }
-function recetasDelDia(plan,d,pf){ return TIPOS.filter(t=>!esLibre(plan,d,t,pf)).map(t=>[t, RECMAP[plan.dias[d][t]]]).filter(([,r])=>r); }
+function recetasDelDia(plan,d,pf){ return tiposDe(pf).filter(t=>!esLibre(plan,d,t,pf)).map(t=>[t, RECMAP[plan.dias[d][t]]]).filter(([,r])=>r); }
 function totalesDia(plan, d, pf){
   let k=0,P=0,C=0,F=0; const FD=factoresDia(plan,d,pf);
   for(const [t,r] of recetasDelDia(plan,d,pf)){
@@ -1658,6 +1666,9 @@ function vPendiente(){
   ${S.admin?`<div class="notice ok"><b>Eres administrador</b><p>Ve a la pestaña Clientes y ${pruebaOn()?'actívate la prueba o un plan':'regístrate un pago'} para probar el cuestionario.</p></div>`:''}`;
 }
 
+function mediaCampos(){
+  const w=S.wizard; return `<div class="field"><label>¿Tomas algo a media mañana?</label><span class="hint">Si dices que sí, te ponemos algo ligero y fácil de llevar, y el desayuno es un poco más pequeño. Las calorías del día son las mismas.</span>${radios('mediaM',{si:{n:'Sí',d:'Algo sobre las 11, en el trabajo o el descanso'},no:{n:'No',d:'Desayuno y no como nada hasta mediodía'}},w.mediaM||'no')}</div>`;
+}
 function cocinaCampos(){
   const w=S.wizard; return `<div class="field"><label>¿Cómo te organizas para cocinar?</label><span class="hint">Si te da pereza cocinar a diario, la app te organiza para cocinar una vez y comer dos.</span>${radios('cocina',COCINA,w.cocina||'normal')}</div>`;
 }
@@ -1665,7 +1676,7 @@ function libreCampos(){
   const w=S.wizard;
   return `<div class="field"><label>Comida libre a la semana</label><span class="hint">Un hueco sin menú para comer lo que te apetezca. Ayuda a mantener el plan sin agobios.</span>
     ${radios('libreDia',{'6':{n:'Sábado'},'0':{n:'Domingo'},'no':{n:'No quiero'}},String(w.libreDia))}</div>
-    ${String(w.libreDia)!=='no'?`<div class="field"><label>¿Qué dejas libre?</label>${radios('libreTipo',{comida:{n:'La comida',d:'Mediodía'},cena:{n:'La cena',d:'Noche'},dia:{n:'Todo el día',d:'Sin menú ese día'}},w.libreTipo)}</div>`:''}${cocinaCampos()}`;
+    ${String(w.libreDia)!=='no'?`<div class="field"><label>¿Qué dejas libre?</label>${radios('libreTipo',{comida:{n:'La comida',d:'Mediodía'},cena:{n:'La cena',d:'Noche'},dia:{n:'Todo el día',d:'Sin menú ese día'}},w.libreTipo)}</div>`:''}${mediaCampos()}${cocinaCampos()}`;
 }
 function supChips(){
   const w=S.wizard; const edad=parseInt(w.edad||S.cli?.perfil?.edad||0,10); const menor=edad && edad<18;
@@ -1674,7 +1685,7 @@ function supChips(){
   return `<div class="field"><label>Suplementos</label><span class="hint">Marca los que tomas o quieres tomar. Si no marcas nada, el menú no lleva ninguno.</span><div class="chips">${ops.map(([k,n,d])=>`<div class="chip pos"><input type="checkbox" id="sp_${k}" data-arr="suplementos" value="${k}" ${w.suplementos.includes(k)?'checked':''}><label for="sp_${k}" title="${d}">${n}</label></div>`).join('')}</div></div>`;
 }
 const WSTEPS = ['Objetivo','Tus datos','Medidas','Actividad','Alimentación'];
-function wDefaults(){ return {objetivo:'', sexo:'', edad:'', peso:'', altura:'', cintura:'', cadera:'', pierna:'', pecho:'', entrenos:'', trabajo:'sentado', dieta:'omni', intolerancias:[], noGusta:[], noGustaTexto:'', suplementos:[], libreDia:'6', libreTipo:'comida', cocina:'normal'}; }
+function wDefaults(){ return {objetivo:'', sexo:'', edad:'', peso:'', altura:'', cintura:'', cadera:'', pierna:'', pecho:'', entrenos:'', trabajo:'sentado', dieta:'omni', intolerancias:[], noGusta:[], noGustaTexto:'', suplementos:[], libreDia:'6', libreTipo:'comida', cocina:'normal', mediaM:'no'}; }
 function numF(id,label,unit,hint=''){ const w=S.wizard; return `<div class="field"><div class="lab-row"><label for="w_${id}">${label}</label>${infoBtn(id)}</div><div class="unit"><input class="inp num" id="w_${id}" data-w="${id}" inputmode="decimal" value="${esc(w[id])}"><span>${unit}</span></div>${hint?`<span class="hint">${hint}</span>`:''}</div>`; }
 function radios(name, opts, cur){ return `<div class="choices">${Object.entries(opts).map(([k,o])=>`<div class="choice"><input type="radio" name="${name}" id="${name}_${k}" value="${k}" data-w="${name}" ${cur===k?'checked':''}><label for="${name}_${k}"><b>${o.n}</b>${o.d?`<small>${o.d}</small>`:''}</label></div>`).join('')}</div>`; }
 // Figura de medidas: silueta frontal neutra + cintas de medir
@@ -1777,7 +1788,7 @@ function validarPaso(st,w){
 async function terminarWizard(){
   const w=S.wizard; const n=k=>r1(parseFloat(String(w[k]).replace(',','.')));
   const f=hoy();
-  const perfil={objetivo:w.objetivo, sexo:w.sexo, edad:Math.round(n('edad')), altura:n('altura'), entrenos:Math.round(n('entrenos')), trabajo:w.trabajo, dieta:w.dieta, intolerancias:w.intolerancias, noGusta:w.noGusta, noGustaTexto:w.noGustaTexto.trim(), suplementos:w.suplementos||[], libre:{dia:String(w.libreDia)==='no'?null:+w.libreDia, tipo:w.libreTipo||'comida'}, cocina:cocinaDe(w), ajusteKcal:0};
+  const perfil={objetivo:w.objetivo, sexo:w.sexo, edad:Math.round(n('edad')), altura:n('altura'), entrenos:Math.round(n('entrenos')), trabajo:w.trabajo, dieta:w.dieta, intolerancias:w.intolerancias, noGusta:w.noGusta, noGustaTexto:w.noGustaTexto.trim(), suplementos:w.suplementos||[], libre:{dia:String(w.libreDia)==='no'?null:+w.libreDia, tipo:w.libreTipo||'comida'}, cocina:cocinaDe(w), media:w.mediaM==='si', ajusteKcal:0};
   const mediciones=[{fecha:f, peso:n('peso'), cintura:n('cintura'), cadera:n('cadera'), pierna:n('pierna'), pecho:n('pecho')}];
   const tmp={...S.cli, perfil, mediciones, rechazadas:[]};
   const plan=generarPlan(tmp, f, S.uid+f, miPeriodo());
@@ -1796,7 +1807,7 @@ function vMenu(){
   const dias = plan.dias.map((_,i)=>{ const f=addDays(plan.inicio,i); const lib=diaLibre(plan,i,c.perfil); const bq=diaBloqueado(plan,i); return `<button class="day ${i===hi?'today':''} ${lib&&!bq?'libre':''} ${bq?'bloq':''}" data-dia="${i}" aria-current="${i===d}"${bq?' aria-label="Bloqueado durante la prueba"':''}><small>${bq?ICO_CANDADO+'PRUEBA':lib?'LIBRE':'SEM '+(Math.floor(i/7)+1)}</small>${fmtFecha(f,{weekday:'short',day:'numeric'})}</button>`; }).join('');
   const lib=libreDe(c.perfil), libreHoy=diaLibre(plan,d,c.perfil); const FD=factoresDia(plan,d,c.perfil), objD=objetivoDia(plan,d,c.perfil);
   const bloq=diaBloqueado(plan,d);
-  const meals = bloq ? tarjetaBloqueada(plan) : (libreHoy && lib.tipo==='dia') ? tarjetaLibre('dia') : TIPOS.map(t=>{
+  const meals = bloq ? tarjetaBloqueada(plan) : (libreHoy && lib.tipo==='dia') ? tarjetaLibre('dia') : tiposDe(c.perfil).map(t=>{
     if(esLibre(plan,d,t,c.perfil)) return tarjetaLibre(t);
     const id=plan.dias[d][t];
     if(!id) return `<article class="meal"><header><span class="mtype">${icon(t)}${TIPO_LABEL[t]}</span></header><p class="prep">No hay platos compatibles con tus preferencias para esta comida. Revisa tus datos o habla con el centro.</p></article>`;
@@ -1914,7 +1925,7 @@ async function fijarPlato(t, id){
   const c=S.cli, plan=structuredClone(c.plan); const fijos={...(c.perfil.fijos||{})};
   if(id){ fijos[t]=id; for(const dia of plan.dias) dia[t]=id; }
   else { const actual=fijos[t]; delete fijos[t];
-    const pool=shuffle(REC.filter(r=>r.t===t && recetaPermitida(r,c)).map(r=>r.id), rng(hash(S.uid+Date.now())));
+    const pool=shuffle(REC.filter(r=>r.t===tipoRec(t) && recetaPermitida(r,c)).map(r=>r.id), rng(hash(S.uid+Date.now())));
     if(pool.length>1){ const ordenados=[actual, ...pool.filter(x=>x!==actual)]; let j=0; for(let d=indiceHoy(plan); d<plan.dias.length; d++) plan.dias[d][t]=ordenados[j++ % ordenados.length]; } }
   const perfil={...c.perfil, fijos};
   if(await guardarCli({perfil, plan})) toast(id?`${TIPO_LABEL[t]} fijado: se repite todos los días`:`${TIPO_LABEL[t]} ya no está fijo: vuelve a variar cada día`);
@@ -1936,9 +1947,9 @@ async function cambiarPlato(t, rechazar){
   const c=S.cli, plan=structuredClone(c.plan), d=S.dia; const actual=plan.dias[d][t];
   const rech = rechazar ? [...new Set([...(c.rechazadas||[]), actual])] : (c.rechazadas||[]);
   const tmp={...c, rechazadas:rech};
-  let pool=REC.filter(r=>r.t===t && r.id!==actual && recetaPermitida(r,tmp));
+  let pool=REC.filter(r=>r.t===tipoRec(t) && r.id!==actual && recetaPermitida(r,tmp));
   if(t==='comida' && diaTupper(plan,d,c.perfil) && !rechazar){ const pt=pool.filter(r=>r.tup); if(pt.length) pool=pt; }
-  if(!pool.length) pool=REC.filter(r=>r.t===t && r.id!==actual && recetaPermitida(r,tmp,true));
+  if(!pool.length) pool=REC.filter(r=>r.t===tipoRec(t) && r.id!==actual && recetaPermitida(r,tmp,true));
   if(!pool.length){ toast('No hay más opciones compatibles para esta comida.'); return; }
   const usados=new Set(TIPOS.map(x=>plan.dias[d][x]));
   const libres=pool.filter(r=>!usados.has(r.id)); const l=libres.length?libres:pool;
@@ -1993,7 +2004,7 @@ function vNevera(){
     <p class="lead">Marca todo lo que tienes en la nevera y en la despensa, elige para qué comida es y pulsa «Ver qué puedo hacer». Primero te salen los platos que puedes hacer ya, sin comprar nada.</p></div>
   <div><button class="btn small ghost" data-nevcerrar="1">← Volver a mi menú</button></div>
   <div class="panel"><div class="row" style="justify-content:space-between;align-items:center"><h3>1. Marca lo que tienes</h3>${sel.size?`<button class="btn small ghost" data-nevlimpiar="1">Borrar todo</button>`:''}</div>${chips}</div>
-  <div class="panel"><h3>2. ¿Para qué comida?</h3><div class="filters" role="group" aria-label="Comida">${TIPOS.map(t=>`<button data-nevtipo="${t}" aria-pressed="${t===tipo}">${TIPO_LABEL[t]}</button>`).join('')}</div>
+  <div class="panel"><h3>2. ¿Para qué comida?</h3><div class="filters" role="group" aria-label="Comida">${TIPOS.filter(t=>t!=='media').map(t=>`<button data-nevtipo="${t}" aria-pressed="${t===tipo}">${TIPO_LABEL[t]}</button>`).join('')}</div>
     <div class="row"><button class="btn primary nevera-gen" id="nevGenBtn" data-nevgen="1" ${sel.size?'':'disabled'}>${textoNevGen(sel.size)}</button></div></div>
   ${resultados}
   ${(typeof asistenteVisible==='function' && asistenteVisible())?`<div class="panel"><h3>¿Tienes algo que no sale en la lista?</h3>
@@ -2305,7 +2316,7 @@ function vFaq(){
 function vPerfil(){
   const c=S.cli, pf=c.perfil;
   if(S.editPerfil){
-    S.wizard ||= {...wDefaults(), ...pf, peso:'', entrenos:String(pf.entrenos), libreDia: libreDe(pf)?String(libreDe(pf).dia):'no', libreTipo: libreDe(pf)?.tipo||'comida'};
+    S.wizard ||= {...wDefaults(), ...pf, mediaM: pf.media?'si':'no', peso:'', entrenos:String(pf.entrenos), libreDia: libreDe(pf)?String(libreDe(pf).dia):'no', libreTipo: libreDe(pf)?.tipo||'comida'};
     const w=S.wizard;
     const porSec={}; for(const [k,z] of Object.entries(ING)){ if(['aceite','tomate_tri','whey','creatina'].includes(k)) continue; (porSec[z.s] ||= []).push([k,z]); }
     return `<div class="stack"><span class="eyebrow">Mis datos</span><h1>Cambiar preferencias</h1><p class="lead">Al guardar se rehace tu menú en curso con tus nuevas preferencias. Tu progreso no cambia.</p></div>
@@ -2335,6 +2346,7 @@ function vPerfil(){
     <div><span class="eyebrow">Intolerancias</span><p>${pf.intolerancias.length?pf.intolerancias.map(k=>INTOL[k]).join(', '):'Ninguna'}</p></div>
     <div><span class="eyebrow">Comida libre</span><p>${textoLibre(pf)}</p></div>
     <div><span class="eyebrow">Cocina</span><p>${COCINA[cocinaDe(pf)].n}</p></div>
+    <div><span class="eyebrow">Media mañana</span><p>${mediaOn(pf)?'Sí':'No'}</p></div>
     ${Object.keys(pf.fijos||{}).length?`<div><span class="eyebrow">Comidas fijas</span><p>${Object.entries(pf.fijos).map(([t,id])=>`${TIPO_LABEL[t]}: ${esc(RECMAP[id]?.n||'—')}`).join('<br>')}</p></div>`:''}
     <div><span class="eyebrow">Suplementos</span><p>${(pf.suplementos||[]).length?pf.suplementos.map(k=>k==='creatina'?'Creatina':'Proteína en polvo').join(', '):'Ninguno'}</p></div>
     <div style="grid-column:1/-1"><span class="eyebrow">No le gusta</span><p>${[...pf.noGusta.map(k=>ING[k]?.n), pf.noGustaTexto].filter(Boolean).map(esc).join(', ')||'Nada indicado'}</p></div>
@@ -2356,7 +2368,7 @@ async function guardarPerfil(){
   if(isNaN(e)||e<0||e>14){ $('#pErr').textContent='Entrenamientos: introduce un valor entre 0 y 14.'; return; }
   const rech=[...document.querySelectorAll('[data-rech]')].filter(x=>x.checked).map(x=>x.dataset.rech);
   const cambioObj = w.objetivo!==c.perfil.objetivo;
-  const perfil={...c.perfil, objetivo:w.objetivo, entrenos:e, trabajo:w.trabajo, dieta:w.dieta, intolerancias:w.intolerancias, noGusta:w.noGusta, noGustaTexto:w.noGustaTexto.trim(), suplementos:w.suplementos||[], libre:{dia:String(w.libreDia)==='no'?null:+w.libreDia, tipo:w.libreTipo||'comida'}, cocina:cocinaDe(w), ajusteKcal: cambioObj?0:(c.perfil.ajusteKcal||0)};
+  const perfil={...c.perfil, objetivo:w.objetivo, entrenos:e, trabajo:w.trabajo, dieta:w.dieta, intolerancias:w.intolerancias, noGusta:w.noGusta, noGustaTexto:w.noGustaTexto.trim(), suplementos:w.suplementos||[], libre:{dia:String(w.libreDia)==='no'?null:+w.libreDia, tipo:w.libreTipo||'comida'}, cocina:cocinaDe(w), media:w.mediaM==='si', ajusteKcal: cambioObj?0:(c.perfil.ajusteKcal||0)};
   const tmp={...c, perfil, rechazadas:rech};
   const plan=generarPlan(tmp, c.plan.inicio, S.uid+Date.now(), semanasPlan(c.plan));
   if(await guardarCli({perfil, rechazadas:rech, plan})){ S.editPerfil=false; S.wizard=null; S.dia=null; toast('Preferencias guardadas. Menú actualizado.'); }
