@@ -193,6 +193,7 @@ main .wrap{padding-block:24px 64px;display:flex;flex-direction:column;gap:24px}
 .menu-atajos{display:flex;gap:8px;flex-wrap:wrap}
 .btn.nevera-btn{display:inline-flex;align-items:center;gap:6px;background:#F2AA3C;border-color:#F2AA3C;color:#121212;font-weight:700}
 .btn.nevera-btn:hover{filter:brightness(1.06)}
+.nev-ok{color:var(--good)}
 .btn.nevera-gen{width:100%;justify-content:center;margin-top:6px}
 
 
@@ -595,6 +596,20 @@ const ING = {
   calabaza:{n:'Calabaza',s:'fruta',k:26,p:1,c:6.5,f:0.1,kg:true,pr:1.60},
   fideos:{n:'Fideos',s:'cereal',k:359,p:12,c:72,f:1.5,a:['gluten'],sg:'Fideos sin gluten',pk:500,pr:0.85,pd:'paquete 500 g'},
   mayonesa:{n:'Mayonesa ligera',s:'despensa',k:290,p:0.8,c:7,f:29,a:['huevo'],d:'huevo',pk:430,pr:1.80,pd:'bote 430 ml',prop:true},
+  conejo:{n:'Conejo troceado',s:'carne',k:136,p:21,c:0,f:5.5,d:'carne',kg:true,pr:7.95},
+  pavo_filete:{n:'Filetes de pechuga de pavo',s:'carne',k:109,p:23,c:0,f:1.5,d:'carne',pk:500,pr:4.50,pd:'bandeja ~500 g'},
+  contramuslo:{n:'Contramuslos de pollo deshuesados',s:'carne',k:121,p:19.7,c:0,f:4.1,d:'carne',pk:600,pr:4.20,pd:'bandeja ~600 g'},
+  sardinas:{n:'Sardinas en aceite de oliva en lata',s:'pescado',k:208,p:24.6,c:0,f:11.5,a:['pescado'],d:'pescado',pk:180,pr:2.40,pd:'pack de 3 latas'},
+  caballa:{n:'Caballa en aceite de oliva en lata',s:'pescado',k:220,p:23,c:0,f:14,a:['pescado'],d:'pescado',pk:240,pr:3.50,pd:'pack de 3 latas'},
+  arroz_int:{n:'Arroz integral',s:'cereal',k:350,p:7.5,c:73,f:2.7,pk:1000,pr:1.60,pd:'paquete 1 kg'},
+  cuscus:{n:'Cuscús integral',s:'cereal',k:355,p:12.5,c:68,f:2,a:['gluten'],sg:'Cuscús sin gluten (de maíz)',pk:500,pr:1.50,pd:'paquete 500 g'},
+  quinoa:{n:'Quinoa',s:'cereal',k:368,p:14,c:64,f:6,pk:500,pr:2.90,pd:'paquete 500 g'},
+  coliflor:{n:'Coliflor',s:'fruta',k:25,p:1.9,c:5,f:0.3,kg:true,pr:2.20},
+  alcachofa:{n:'Alcachofas (corazones congelados o frescas)',s:'fruta',k:47,p:3.3,c:10,f:0.2,pk:400,pr:2.50,pd:'bolsa congelada 400 g'},
+  acelgas:{n:'Acelgas',s:'fruta',k:19,p:1.8,c:3.7,f:0.2,pk:500,pr:1.50,pd:'manojo ~500 g'},
+  setas:{n:'Setas variadas',s:'fruta',k:22,p:2.5,c:3.5,f:0.3,pk:300,pr:2.20,pd:'bandeja 300 g'},
+  kefir:{n:'Kéfir natural',s:'lacteo',k:52,p:3.6,c:4,f:2.5,a:['lactosa'],d:'lacteo',u:'ml',sl:'Kéfir sin lactosa',pk:500,pr:1.60,pd:'botella 500 ml'},
+  mandarina:{n:'Mandarinas',s:'fruta',k:53,p:0.8,c:13,f:0.3,kg:true,pr:1.99},
   canonigos:{n:'Canónigos',s:'fruta',k:21,p:2,c:3.6,f:0.4,pk:125,pr:1.20,pd:'bolsa 125 g'},
   salsa_soja:{n:'Salsa de soja',s:'despensa',k:53,p:8,c:4.9,f:0.6,a:['soja','gluten'],sg:'Salsa de soja sin gluten (tamari)',u:'ml',pk:250,pr:1.30,pd:'botella 250 ml',prop:true},
 };
@@ -623,6 +638,8 @@ const REC = [
  ['d20','desayuno','Tortilla de claras con pavo y tostada',[['claras',150],['huevo',60],['pavo',50],['pan',60],['naranja',150],['aceite',3]],'Bate las claras con el huevo y cuaja la tortilla. Rellénala con el pavo.',['sal','café']],
  ['d21','desayuno','Gachas proteicas de avena',[['avena',50],['leche',200],['whey',25],['fresas',80]],'Cuece la avena con la leche, aparta del fuego y mezcla la proteína. Añade la fruta.',['canela']],
  ['d18','desayuno','Tortitas de maíz con pavo y tomate + yogur y pera',[['tortitas',30],['pavo',60],['tomate',60],['yogur',125],['pera',150]],'Pon el pavo y el tomate sobre las tortitas.',[]],
+ ['d22','desayuno','Kéfir con avena, plátano y nueces',[['kefir',250],['avena',40],['platano',100],['nueces',10]],'Mezcla en un bol el kéfir con la avena y deja 5 minutos. Añade el plátano en rodajas y las nueces.',['canela']],
+ ['d23','desayuno','Tostada de tomate y sardinas + mandarinas',[['pan',70],['tomate',80],['sardinas',50],['mandarina',150],['leche',150]],'Tuesta el pan, ralla el tomate por encima y pon las sardinas escurridas. Un café con leche y las mandarinas.',['café','pimienta']],
 
  // ---------- COMIDAS ----------
  ['c01','comida','Pollo asado con patatas y ensalada',[['pollo',150],['patata',250],['ensalada',60],['tomate',100],['aceite',12]],'Patatas en gajos al horno 25 min a 200 °C, añade el pollo y deja 15-20 min más.',['ajo','pimentón','sal']],
@@ -669,6 +686,20 @@ const REC = [
  ['c40','comida','Wok de verduras con ternera y arroz',[['ternera',130],['arroz',70],['pimiento',80],['calabacin',80],['zanahoria',50],['cebolla',40],['salsa_soja',15],['aceite',8]],'Saltea la ternera en tiras a fuego fuerte 2 min y sácala. Saltea las verduras en tiras 5 min, vuelve a meter la carne con la soja y sirve con el arroz cocido.',['ajo']],
  ['c41','comida','Wok de fideos con langostinos y verduras',[['langostinos',130],['fideos',75],['pimiento',80],['zanahoria',50],['calabacin',80],['salsa_soja',15],['aceite',8]],'Cuece los fideos. Saltea las verduras en tiras a fuego fuerte 4 min, añade los langostinos 2 min y luego los fideos y la soja.',['ajo','jengibre']],
  ['c42','comida','Ensalada de canónigos con pollo, manzana y nueces',[['pollo',140],['canonigos',80],['manzana',100],['tomate',100],['nueces',15],['pan',60],['aceite',8]],'Pollo a la plancha en tiras sobre los canónigos con la manzana en dados, el tomate y las nueces. Aliña y acompaña con pan.',['vinagre de Módena','sal']],
+ // Más legumbre, pescado azul, ave y conejo, cereal integral y verdura de temporada (recomendaciones AESAN)
+ ['c43','comida','Conejo al ajillo con patatas al horno',[['conejo',220],['patata',200],['ensalada',50],['aceite',10]],'Patatas en gajos al horno 25 min a 200 °C. Dora el conejo troceado con ajos laminados, añade un chorrito de vino blanco y tomillo, tapa y deja 20 min a fuego suave.',['ajo','vino blanco','tomillo','sal']],
+ ['c44','comida','Contramuslos al horno con patatas y verduras',[['contramuslo',160],['patata',180],['pimiento',80],['calabacin',80],['cebolla',50],['aceite',8]],'Todo en una bandeja de horno con aceite, ajo y pimentón. 35 min a 200 °C, dando la vuelta a mitad.',['ajo','pimentón','romero','sal']],
+ ['c45','comida','Filetes de pavo con cuscús y verduras',[['pavo_filete',150],['cuscus',60],['calabacin',100],['pimiento',60],['cebolla',40],['aceite',8]],'Hidrata el cuscús con el mismo volumen de agua caliente 5 min. Saltea las verduras y haz el pavo a la plancha.',['comino','limón','sal']],
+ ['c46','comida','Ensalada templada de quinoa con pollo',[['pollo',130],['quinoa',60],['tomate',100],['pepino',60],['aguacate',40],['aceite',6]],'Cuece la quinoa 12 min y escúrrela. Mézclala con el pollo a la plancha en tiras y la verdura picada. Aliña.',['limón','sal']],
+ ['c47','comida','Salteado de lentejas con arroz integral y verduras',[['lentejas',220],['arroz_int',50],['pimiento',70],['calabacin',80],['cebolla',50],['aceite',8]],'Cuece el arroz integral 30 min (o usa uno ya cocido). Saltea las verduras, añade las lentejas escurridas y el arroz y dale un par de vueltas.',['comino','pimentón','sal']],
+ ['c48','comida','Pasta integral con sardinas y tomate',[['pasta',80],['sardinas',90],['tomate_tri',130],['cebolla',40],['aceite',3]],'Sofríe la cebolla, añade el tomate 10 min y las sardinas escurridas al final. Mezcla con la pasta cocida.',['ajo','orégano','sal']],
+ ['c49','comida','Cuscús con garbanzos y verduras',[['garbanzos',170],['cuscus',60],['calabacin',100],['zanahoria',60],['pimiento',60],['aceite',8]],'Saltea las verduras con comino 8 min, añade los garbanzos. Hidrata el cuscús 5 min con agua caliente y mezcla.',['comino','canela','sal']],
+ ['c50','comida','Alcachofas a la montillana con patatas y huevo',[['alcachofa',250],['patata',150],['serrano',35],['huevo',60],['cebolla',40],['aceite',8]],'Rehoga cebolla y ajo con el jamón en taquitos. Añade las alcachofas, las patatas en dados, un chorrito de vino de Montilla y agua: 20 min. Sirve con huevo duro.',['ajo','vino de Montilla','hierbabuena','sal']],
+ ['c51','comida','Acelgas esparragadas con garbanzos',[['garbanzos',200],['acelgas',250],['pan',30],['huevo',60],['aceite',10]],'Cuece las acelgas picadas 8 min. Fríe el ajo y el pan, májalos con comino y pimentón y añádelos con las acelgas y los garbanzos. 5 min y sirve con huevo duro.',['ajo','comino','pimentón','vinagre','sal']],
+ ['c52','comida','Pollo al curry suave con arroz integral',[['pollo',150],['arroz_int',70],['cebolla',60],['yogur',60],['aceite',8]],'Pocha la cebolla, dora el pollo en dados con el curry y añade el yogur con un poco de agua: 10 min. Sirve con el arroz integral cocido.',['curry','sal']],
+ ['c53','comida','Salmón al horno con quinoa y brócoli',[['salmon',130],['quinoa',60],['brocoli',150],['aceite',4]],'Salmón al horno 12 min a 200 °C. Cuece la quinoa 12 min y el brócoli al vapor 6 min.',['limón','eneldo','sal']],
+ ['c54','comida','Papas aliñás con caballa',[['patata',230],['caballa',80],['cebolla',40],['pimiento',40],['huevo',60],['aceite',6]],'Cuece las patatas con piel, pélalas y córtalas templadas. Aliña con cebolla y pimiento picados, aceite, vinagre y perejil, y pon encima la caballa y el huevo duro.',['vinagre','perejil','sal']],
+ ['c55','comida','Coliflor rehogada con pimentón y huevos',[['coliflor',350],['patata',150],['huevo',120],['aceite',10]],'Cuece la coliflor y la patata 12 min. Rehoga ajo con pimentón y aceite, añade la coliflor y la patata escurridas y cuaja los huevos encima.',['ajo','pimentón','sal']],
 
  // ---------- MERIENDAS ----------
  ['m01','merienda','Yogures con fresas',[['yogur',250],['fresas',100]],'Mezcla y listo.',[]],
@@ -692,6 +723,8 @@ const REC = [
  ['m19','merienda','Pieza de fruta con yogur de proteínas y nueces',[['manzana',150],['yogur_prot',120],['nueces',10]],'Una pieza de fruta de temporada (manzana, pera, mandarina…), un yogur de proteínas y unas nueces. Fácil de llevar.',[]],
  ['m20','merienda','Queso fresco con nueces y miel',[['queso_fresco',100],['nueces',15],['miel',10]],'El queso fresco en dados con las nueces y un hilo de miel.',[]],
  ['m21','merienda','Naranja y un puñado de almendras',[['naranja',200],['almendras',20]],'Pieza de fruta y frutos secos. Para tomar en cualquier sitio.',[]],
+ ['m22','merienda','Kéfir con fresas',[['kefir',250],['fresas',100]],'El kéfir en un vaso o bol con las fresas troceadas.',[]],
+ ['m23','merienda','Mandarinas y un puñado de nueces',[['mandarina',200],['nueces',15]],'Fruta de temporada y frutos secos. Para llevar a cualquier parte.',[]],
 
  // ---------- CENAS ----------
  ['n01','cena','Tortilla francesa con ensalada',[['huevo',120],['ensalada',80],['tomate',100],['pan',40],['aceite',10]],'Tortilla de dos huevos y ensalada de lechuga y tomate.',['sal','vinagre']],
@@ -733,6 +766,16 @@ const REC = [
  ['n35','cena','Ensalada de canónigos con atún, huevo y aguacate',[['atun',80],['canonigos',80],['huevo',60],['aguacate',50],['tomate',100],['pan',30],['aceite',6]],'Monta los canónigos con el tomate, el aguacate, el atún y el huevo duro en cuartos. Aliña al momento.',['vinagre','sal']],
  ['n36','cena','Wok de verduras con pollo',[['pollo',140],['pimiento',100],['calabacin',100],['champinones',80],['cebolla',40],['zanahoria',40],['salsa_soja',15],['aceite',8]],'Saltea el pollo en tiras a fuego fuerte y sácalo. Saltea las verduras 5 min, vuelve a meter el pollo con la soja. Listo en 15 min.',['ajo']],
  ['n37','cena','Ensalada de canónigos con queso fresco, nueces y huevo',[['huevo',120],['canonigos',80],['queso_fresco',60],['tomate',100],['nueces',15],['pan',30],['aceite',5]],'Canónigos con el tomate, el queso fresco en dados, las nueces y dos huevos duros. Aliña al momento.',['vinagre de Módena','sal']],
+ // Más pescado azul, pavo, legumbre y verdura
+ ['n38','cena','Sardinas con ensalada de tomate',[['sardinas',100],['tomate',200],['cebolla',30],['pan',40],['aceite',3]],'Tomate en rodajas con cebolla, sal y orégano. Las sardinas escurridas por encima y pan.',['orégano','sal']],
+ ['n39','cena','Revuelto de setas con jamón',[['huevo',120],['setas',200],['serrano',20],['pan',40],['aceite',6]],'Saltea las setas con ajo a fuego fuerte 5 min, añade el jamón y los huevos y remueve hasta cuajar.',['ajo','perejil','sal']],
+ ['n40','cena','Pavo a la plancha con verduras salteadas',[['pavo_filete',150],['calabacin',120],['pimiento',80],['cebolla',40],['pan',30],['aceite',8]],'Saltea las verduras en tiras 6 min. El pavo a la plancha 3 min por lado.',['ajo','limón','sal']],
+ ['n41','cena','Ensalada de quinoa con atún y aguacate',[['atun',80],['quinoa',50],['tomate',100],['pepino',60],['aguacate',40],['aceite',5]],'Cuece la quinoa 12 min y enfríala. Mézclala con el resto y aliña.',['limón','sal']],
+ ['n42','cena','Tortilla de alcachofas con ensalada',[['huevo',120],['alcachofa',150],['cebolla',30],['ensalada',60],['tomate',80],['aceite',8]],'Saltea las alcachofas en láminas con la cebolla 8 min, mezcla con los huevos batidos y cuaja.',['sal']],
+ ['n43','cena','Caballa con pimientos asados',[['caballa',90],['pimiento',150],['cebolla',30],['pan',40]],'Asa los pimientos y la cebolla al microondas 8-10 min tapados (o al horno), pélalos, aliña y pon la caballa encima.',['ajo','sal']],
+ ['n44','cena','Hummus con crudités y huevo duro',[['huevo',120],['hummus',80],['zanahoria',80],['pepino',80],['pan',30]],'Corta las verduras en bastones y cuece los huevos 10 min. Moja en el hummus.',['pimentón']],
+ ['n45','cena','Wrap de pavo, aguacate y lechuga',[['pavo_filete',110],['wrap',60],['aguacate',40],['ensalada',30],['tomate',60]],'Haz el pavo a la plancha en tiras y enrolla con el aguacate, la lechuga y el tomate.',['limón','sal']],
+ ['n46','cena','Acelgas rehogadas con patata y huevos',[['acelgas',300],['patata',120],['huevo',120],['aceite',8]],'Cuece las acelgas y la patata 12 min. Escurre, rehoga con ajo y pon los huevos encima hasta que cuajen.',['ajo','pimentón','sal']],
 ].map(([id,t,n,i,p,x])=>{
   const r={id,t,n,i,p,x}; let k=0,P=0,C=0,F=0;
   for(const [key,g] of i){const z=ING[key]; k+=z.k*g/100; P+=z.p*g/100; C+=z.c*g/100; F+=z.f*g/100;}
@@ -762,11 +805,74 @@ const POSTRES = [
   return {id,n,rac,min,tags,i,pasos,casa,kr:Math.round(k/rac),pr:Math.round(P/rac)};
 });
 const POSTREMAP = Object.fromEntries(POSTRES.map(p=>[p.id,p]));
-const RECMAP = Object.fromEntries(REC.map(r=>[r.id,r]));
+const RECMAP_BASE = Object.fromEntries(REC.map(r=>[r.id,r]));
+// Recetas adaptadas a lo que tiene el socio: «c04~s.pasta.arroz~o.cebolla» = c04 con arroz en vez de pasta y sin cebolla
+const RECMAP = new Proxy(RECMAP_BASE, {
+  get(t,k){ if(typeof k!=='string' || k in t) return t[k]; if(k.includes('~')){ const r=recetaAdaptada(k); if(r) t[k]=r; return r; } return undefined; },
+  has(t,k){ return (k in t) || (typeof k==='string' && k.includes('~') && !!recetaAdaptada(k)); }
+});
 // Tiempo de cada plato (min), dificultad (m = media) y si aguanta bien en táper (t)
-const META_TXT='d01:5,d02:5,d03:5,d04:8,d05:8,d06:8,d07:3,d08:3,d09:12,d10:3,d11:12,d12:5,d13:6,d14:5,d15:8,d16:5,d17:3,d19:5,d20:10,d21:8,d18:3,c01:45t,c02:25t,c03:30t,c04:25t,c05:20t,c06:35t,c07:15t,c08:35,c09:25t,c10:20t,c11:25t,c12:40mt,c13:30mt,c14:35mt,c15:25t,c16:30mt,c17:30t,c18:20t,c19:25t,c20:35t,c21:50mt,c22:30t,c23:30t,c25:30t,c24:30t,c26:60mt,c27:40t,c28:40mt,c29:45mt,c30:35t,c31:40mt,c32:30t,c33:40,c34:30m,c35:25t,c36:60mt,c37:20t,c38:25t,c39:20,c40:25t,c41:20,c42:15,m01:2,m02:2,m03:1,m04:4,m05:5,m06:3,m07:5,m08:2,m09:12,m10:3,m11:1,m12:5,m14:3,m15:3,m16:8,m13:3,m17:2,m18:3,m19:1,m20:2,m21:1,n01:10,n02:30,n03:15,n04:25,n05:15,n06:12,n07:15,n08:15,n09:5,n10:15,n11:5,n12:15,n13:15,n14:10,n15:8,n16:35m,n17:15,n18:12,n20:25,n21:20,n22:12,n19:15,n23:20,n24:15,n25:40m,n26:12,n27:15,n28:15,n29:20,n30:15,n31:30,n32:30,n33:15,n34:10,n35:10,n36:15,n37:10';
+const META_TXT='d01:5,d02:5,d03:5,d04:8,d05:8,d06:8,d07:3,d08:3,d09:12,d10:3,d11:12,d12:5,d13:6,d14:5,d15:8,d16:5,d17:3,d19:5,d20:10,d21:8,d18:3,c01:45t,c02:25t,c03:30t,c04:25t,c05:20t,c06:35t,c07:15t,c08:35,c09:25t,c10:20t,c11:25t,c12:40mt,c13:30mt,c14:35mt,c15:25t,c16:30mt,c17:30t,c18:20t,c19:25t,c20:35t,c21:50mt,c22:30t,c23:30t,c25:30t,c24:30t,c26:60mt,c27:40t,c28:40mt,c29:45mt,c30:35t,c31:40mt,c32:30t,c33:40,c34:30m,c35:25t,c36:60mt,c37:20t,c38:25t,c39:20,c40:25t,c41:20,c42:15,m01:2,m02:2,m03:1,m04:4,m05:5,m06:3,m07:5,m08:2,m09:12,m10:3,m11:1,m12:5,m14:3,m15:3,m16:8,m13:3,m17:2,m18:3,m19:1,m20:2,m21:1,n01:10,n02:30,n03:15,n04:25,n05:15,n06:12,n07:15,n08:15,n09:5,n10:15,n11:5,n12:15,n13:15,n14:10,n15:8,n16:35m,n17:15,n18:12,n20:25,n21:20,n22:12,n19:15,n23:20,n24:15,n25:40m,n26:12,n27:15,n28:15,n29:20,n30:15,n31:30,n32:30,n33:15,n34:10,n35:10,n36:15,n37:10,d22:5,d23:5,c43:45t,c44:40t,c45:20t,c46:20t,c47:35t,c48:20t,c49:20t,c50:30mt,c51:25t,c52:30t,c53:25t,c54:30t,c55:25,n38:5,n39:12,n40:15,n41:15,n42:20,n43:12,n44:12,n45:12,n46:20,m22:2,m23:1';
 const META=Object.fromEntries(META_TXT.split(',').map(x=>{ const [id,v]=x.split(':'); return [id,{min:parseInt(v,10), dif:v.includes('m')?'m':'f', tup:v.includes('t')}]; }));
 for(const r of REC){ Object.assign(r, META[r.id]||{min:15,dif:'f',tup:false}); }
+/* ---------- Adaptar una receta a lo que hay en casa ---------- */
+// Ingredientes que se pueden cambiar entre sí (misma función en el plato)
+const NEV_GRUPOS=[['pollo','contramuslo','pavo_filete','lomo','ternera','conejo'],['merluza','bacalao','dorada'],['salmon','emperador'],['langostinos','sepia'],['arroz','arroz_int','pasta','fideos','cuscus','quinoa'],
+  ['lentejas','garbanzos','alubias'],['ensalada','canonigos'],['calabacin','berenjena'],['espinacas','acelgas'],['champinones','setas'],['brocoli','coliflor'],['yogur','yogur_prot','kefir'],['nueces','almendras'],
+  ['naranja','mandarina','manzana','pera','kiwi'],['pan','wrap'],['atun','sardinas','caballa','boquerones']];
+// Ingredientes secundarios: si faltan, el plato se puede hacer sin ellos
+const NEV_OMITIBLE=new Set([...Object.keys(ING).filter(k=>ING[k].s==='fruta' && !['patata','boniato','platano'].includes(k)),'tomate_tri','queso_rallado','queso_lonchas','mozzarella','nueces','almendras','pan','tortitas','serrano']);
+const nomCorto = k => ING[k].n.split(' (')[0].split(' o ')[0].replace(/ en (lonchas|filetes|lomos|rodajas|bote|lata).*$/,'').toLowerCase();
+const NOM_SUB={pollo:'pollo',lomo:'lomo',ternera:'ternera',merluza:'merluza',bacalao:'bacalao',dorada:'dorada',salmon:'salmón',emperador:'emperador',langostinos:'langostinos',sepia:'choco',arroz:'arroz',pasta:'pasta',fideos:'fideos',lentejas:'lentejas',garbanzos:'garbanzos',alubias:'alubias',calabacin:'calabacín',berenjena:'berenjena',atun:'atún',boquerones:'boquerones',nueces:'nueces',almendras:'almendras',pan:'pan',wrap:'tortillas',yogur:'yogur',yogur_prot:'yogur de proteínas',ensalada:'lechuga',canonigos:'canónigos',naranja:'naranja',manzana:'manzana',pera:'pera',kiwi:'kiwi',contramuslo:'contramuslos',pavo_filete:'pavo',conejo:'conejo',arroz_int:'arroz integral',cuscus:'cuscús',quinoa:'quinoa',acelgas:'acelgas',setas:'setas',coliflor:'coliflor',brocoli:'brócoli',espinacas:'espinacas',champinones:'champiñones',kefir:'kéfir',mandarina:'mandarina',sardinas:'sardinas',caballa:'caballa'};
+// Cambia en el nombre del plato la palabra del ingrediente sustituido («Alubias con verduras» → «Garbanzos con verduras»)
+function renombrar(n,k,sub){
+  const stems=palabrasIng(k); const nuevo=NOM_SUB[sub]||nomCorto(sub);
+  // primero el nombre completo del ingrediente («pechuga de pollo»), luego una palabra suelta
+  const ph=norm(nomCorto(k)), at=norm(n).indexOf(ph);
+  if(at>=0 && norm(n).length===n.length) return n.slice(0,at)+(at===0?nuevo.charAt(0).toUpperCase()+nuevo.slice(1):nuevo)+n.slice(at+ph.length);
+  const parts=n.split(/(\s+)/); 
+  for(let j=0;j<parts.length;j++){ const w=norm(parts[j]).replace(/[^a-z0-9]/g,''); if(w.length>=4 && stems.some(s=>w.startsWith(s))){ const lead=parts[j].match(/^[^A-Za-zÁÉÍÓÚÑáéíóúñ]*/)[0], tail=parts[j].match(/[^A-Za-zÁÉÍÓÚÑáéíóúñ]*$/)[0];
+      parts[j]=lead+(j===0?nuevo.charAt(0).toUpperCase()+nuevo.slice(1):nuevo)+tail; return parts.join(''); } }
+  return n;
+}
+function recetaAdaptada(id){
+  const [b,...ops]=id.split('~'); const base=RECMAP_BASE[b]; if(!base) return undefined;
+  let i=base.i.map(([k,g])=>[k,g]); const cambios=[]; let n=base.n;
+  for(const op of ops){ const [tp,k,sub]=op.split('.'); if(!ING[k]) return undefined;
+    if(tp==='o'){ i=i.filter(([x])=>x!==k); cambios.push('sin '+nomCorto(k)); }
+    else if(tp==='s' && ING[sub]){ i=i.map(([x,g])=> x===k ? [sub, Math.max(5, Math.round(g*ING[k].k/Math.max(1,ING[sub].k)/5)*5)] : [x,g]); cambios.push(nomCorto(sub)+' en vez de '+nomCorto(k)); n=renombrar(n,k,sub); }
+    else return undefined; }
+  const acc={}; for(const [k,g] of i) acc[k]=(acc[k]||0)+g; i=Object.entries(acc);
+  let k=0,P=0,C=0,F=0; for(const [key,g] of i){ const z=ING[key]; k+=z.k*g/100; P+=z.p*g/100; C+=z.c*g/100; F+=z.f*g/100; }
+  return {...base, id, n, i, k,P,C,F, base:b, cambios};
+}
+// Busca la mejor forma de hacer un plato con lo que hay: cambia ingredientes equivalentes y quita los secundarios
+// Platos cuyo nombre no lleva el ingrediente pero no existen sin él
+const NEV_PROTEGE={gazpacho:['tomate','pimiento','pepino'],salmorejo:['tomate','pan'],pipirrana:['tomate','pimiento','pepino'],pisto:['calabacin','pimiento','tomate_tri'],ensaladilla:['patata','mayonesa'],puchero:['garbanzos'],hamburguesa:['pan'],fajita:['wrap'],serranito:['pan','lomo','pimiento'],sandwich:['pan'],bocadillo:['pan'],montadito:['pan'],tostada:['pan'],tostadas:['pan'],pizza:['wrap','tomate_tri','mozzarella'],flamenquin:['lomo','serrano'],crema:['calabacin','calabaza','puerro']};
+NEV_PROTEGE.verdura=Object.keys(ING).filter(k=>ING[k].s==='fruta' && !['patata','boniato','platano','manzana','pera','naranja','kiwi','fresas','aguacate'].includes(k));
+const NEV_STOP=new Set(['de','o','en','con','y','la','el','los','las','bolsa','bote','lata','tarro','filetes','lomos','rodajas','lonchas','natural','integral','integrales','frescas','frescos','congelada','congelado','congeladas','congelados','cocidas','cocidos','pelados','limpio','limpios','tipo','semidesnatada','desnatado','extra','virgen','fina','baby','light','tierno']);
+function palabrasIng(k){ return norm(ING[k].n).split(/[^a-z0-9ñ]+/).filter(w=>w.length>=4 && !NEV_STOP.has(w)).map(w=>w.replace(/(es|s)$/,'')); }
+function adaptarANevera(r, sel, cli){
+  const keys=[...new Set(r.i.map(([k])=>k).filter(k=>!NEV_FUERA.has(k)))];
+  const ops=[], falta=[], tiene=[];
+  const nombreR=' '+norm(r.n)+' ';
+  for(const k of keys){
+    if(sel.has(k)){ tiene.push(k); continue; }
+    // lo que da nombre al plato no se quita ni se cambia (salvo la ensalada de acompañamiento)
+    const enNombre = (k!=='ensalada' && palabrasIng(k).some(w=>nombreR.includes(' '+w))) || Object.entries(NEV_PROTEGE).some(([w,ks])=>nombreR.includes(' '+w) && ks.includes(k)) || (k==='ensalada' && nombreR.startsWith(' ensalada'));
+    if(ops.length<2){
+      const g=NEV_GRUPOS.find(x=>x.includes(k)); const sub=g && g.find(x=>x!==k && sel.has(x) && !keys.includes(x));
+      if(sub){ ops.push(`s.${k}.${sub}`); tiene.push(sub); continue; }
+      if(!enNombre && k!==r.i[0][0] && NEV_OMITIBLE.has(k) && ING[k].k*(r.i.find(([x])=>x===k)[1])/100 < r.k*0.3){ ops.push(`o.${k}`); continue; }
+    }
+    falta.push(k);
+  }
+  const id = ops.length ? r.id+'~'+ops.join('~') : r.id;
+  const rr = RECMAP[id]; if(!rr || !recetaPermitida(rr, cli)) return null;
+  // el plato tiene que salir de verdad de lo que hay: al menos dos cosas tuyas (o la mitad del plato)
+  if(tiene.length < Math.min(2, Math.ceil(keys.length/2))) return null;
+  return {r:rr, tiene, falta, cambios:rr.cambios||[], principal: sel.has(r.i[0][0]) || ops.some(o=>o.startsWith('s.'+r.i[0][0]+'.'))};
+}
 const etiquetaTiempo = r => `${r.min} min · ${r.dif==='m'?'media':'fácil'}`;
 /* ---------- Cocina una vez y come dos ---------- */
 const COCINA = {
@@ -1699,9 +1805,10 @@ function vMenu(){
     const nota = (t==='comida' && sob) ? `<p class="cocina-nota">Cocina el doble: la otra ración es tu cena de hoy. Guárdala en un táper.</p>`
       : (t==='cena' && sob) ? `<p class="cocina-nota">Ya está hecha: es lo que te sobró de la comida. Calienta esta cantidad y listo.</p>`
       : tup ? `<p class="cocina-nota">La dejaste hecha el domingo: calienta tu táper y listo.</p>` : '';
+    const notaAd = r.cambios?.length ? `<p class="cocina-nota">Adaptado a lo que tienes: ${esc(r.cambios.join(', '))}.</p>` : '';
     const tags=`<div class="tags"><span class="tag tiempo">${(t==='cena'&&sob)||tup?'Solo calentar':etiquetaTiempo(r)}</span>${t==='comida'&&sob?'<span class="tag doble">Comida + cena</span>':''}</div>`;
     return `<article class="meal"><header><span class="mtype">${icon(t)}${TIPO_LABEL[t]}${t==='cena'&&sob?' · sobras':''}</span><span class="mkcal">${Math.round(k)} kcal</span></header>
-      <h3>${esc(r.n)}</h3>${tags}${nota}<ul class="ings">${lis}</ul>${(t==='cena'&&sob)||tup?'':`<p class="prep">${esc(r.p)}</p>`}${r.x.length&&!((t==='cena'&&sob)||tup)?`<p class="extras">Además: ${esc(r.x.join(', '))}</p>`:''}
+      <h3>${esc(r.n)}</h3>${tags}${nota}${notaAd}<ul class="ings">${lis}</ul>${(t==='cena'&&sob)||tup?'':`<p class="prep">${esc(r.p)}</p>`}${r.x.length&&!((t==='cena'&&sob)||tup)?`<p class="extras">Además: ${esc(r.x.join(', '))}</p>`:''}
       ${(t==='comida'||t==='cena')?`<div class="row"><button class="btn small rapido" data-rapido="${t}">${ICO_RAYO}Hoy no tengo ganas</button></div>`:''}
       <div class="row">${c.perfil.fijos?.[t]===id
         ? `<span class="fijo-tag">Fijo todos los días</span><button class="btn small" data-swap="${t}">Cambiar por otro (todos los días)</button><button class="btn small ghost" data-desfijar="${t}">Quitar fijo</button>`
@@ -1861,27 +1968,40 @@ function vNevera(){
   const chips=ORDEN_S.filter(s=>porSec[s]).map(s=>`<span class="eyebrow" style="margin-top:6px">${SECC[s]}</span><div class="chips">${porSec[s].sort((a,b)=>ING[a].n.localeCompare(ING[b].n,'es')).map(k=>`<div class="chip nev"><input type="checkbox" id="nv_${k}" data-nev="${k}" ${sel.has(k)?'checked':''}><label for="nv_${k}">${esc(ingNombre(k,pf))}</label></div>`).join('')}</div>`).join('');
   let resultados='';
   if(S.nevGen && sel.size){
-    const nombre=k=>ingNombre(k,pf).toLowerCase();
-    const res=perm.filter(r=>r.t===tipo).map(r=>{ const keys=[...new Set(r.i.map(([k])=>k).filter(k=>!NEV_FUERA.has(k)))]; const tiene=keys.filter(k=>sel.has(k)); return {r,keys,tiene,falta:keys.filter(k=>!sel.has(k)), s:tiene.length/keys.length+(sel.has(keys[0])?0.35:0)}; })
-      .filter(x=>x.tiene.length).sort((a,b)=>b.s-a.s || a.falta.length-b.falta.length || a.r.min-b.r.min).slice(0,6);
+    const nombre=k=>nomCorto(k);
+    const todos=perm.filter(r=>r.t===tipo).map(r=>adaptarANevera(r,sel,c)).filter(Boolean)
+      .sort((a,b)=>a.falta.length-b.falta.length || b.principal-a.principal || a.cambios.length-b.cambios.length || b.tiene.length-a.tiene.length || a.r.min-b.r.min)
+      .filter((x,i,arr)=>{ const cl=z=>z.r.i.map(([k])=>k).sort().join(','); return arr.findIndex(y=>norm(y.r.n)===norm(x.r.n) || cl(y)===cl(x))===i; });
+    const ya=todos.filter(x=>!x.falta.length).slice(0,8), casi=todos.filter(x=>x.falta.length===1).slice(0, ya.length>=4?3:5);
     const bloqueado = diaBloqueado(plan,d) || esLibre(plan,d,tipo,pf);
     const diaTxt = d===indiceHoy(plan) ? 'hoy' : 'el '+fmtFecha(addDays(plan.inicio,d),{weekday:'long'});
-    const cards=res.map(({r,tiene,falta})=>`<article class="meal"><header><span class="mtype">${icon(tipo)}${TIPO_LABEL[tipo]}</span><span class="mkcal">${etiquetaTiempo(r)}</span></header>
+    const card=({r,falta,cambios})=>`<article class="meal"><header><span class="mtype">${icon(tipo)}${TIPO_LABEL[tipo]}</span><span class="mkcal">${etiquetaTiempo(r)}</span></header>
       <h3>${esc(r.n)}</h3>
-      <p class="prep"><b>Tienes:</b> ${esc(tiene.map(nombre).join(', '))}</p>
-      ${falta.length?`<p class="prep"><b>Te falta:</b> ${esc(falta.map(nombre).join(', '))}</p>`:'<p class="prep"><b>¡Lo tienes todo!</b></p>'}
-      <div class="row"><button class="btn small primary" data-nevput="${r.id}" ${bloqueado||plan.dias[d]?.[tipo]===r.id?'disabled':''}>${plan.dias[d]?.[tipo]===r.id?'Ya está en tu menú':`Ponerlo en mi ${TIPO_LABEL[tipo].toLowerCase()} de ${diaTxt}`}</button></div></article>`).join('');
-    resultados=`<div class="stack" id="nevRes"><span class="eyebrow">Resultado</span><h2>Con lo que tienes puedes hacer</h2>
-      ${cards?`<div class="meals">${cards}</div>`:`<p class="prep">Con eso no sale ningún plato de ${TIPO_LABEL[tipo].toLowerCase()}. Marca algo más o prueba con otra comida.</p>`}
-      ${bloqueado?`<p class="fine">Ese día la ${TIPO_LABEL[tipo].toLowerCase()} es libre o no está disponible: elige otro día en tu menú para ponerla.</p>`:''}</div>`;
+      ${falta.length?`<p class="prep"><b>Solo te falta:</b> ${esc(falta.map(nombre).join(', '))}</p>`:'<p class="prep nev-ok"><b>Lo puedes hacer ya con lo que tienes</b></p>'}
+      ${cambios.length?`<p class="cocina-nota">Adaptado: ${esc(cambios.join(', '))}</p>`:''}
+      <div class="row"><button class="btn small primary" data-nevput="${r.id}" ${bloqueado||plan.dias[d]?.[tipo]===r.id?'disabled':''}>${plan.dias[d]?.[tipo]===r.id?'Ya está en tu menú':`Ponerlo en mi ${TIPO_LABEL[tipo].toLowerCase()} de ${diaTxt}`}</button></div></article>`;
+    resultados=`<div class="stack" id="nevRes"><span class="eyebrow">Resultado</span>
+      ${ya.length?`<h2>Lo puedes hacer ya</h2><div class="meals">${ya.map(card).join('')}</div>`:`<div class="notice"><b>Con eso no sale ningún plato completo de ${TIPO_LABEL[tipo].toLowerCase()}</b><p>Marca algo más (por ejemplo, lo que tengas en la despensa: arroz, pasta, legumbres, tomate triturado) o prueba con otra comida.</p></div>`}
+      ${casi.length?`<h2 style="margin-top:8px">Te falta solo una cosa</h2><div class="meals">${casi.map(card).join('')}</div>`:''}
+      ${bloqueado?`<p class="fine">Ese día la ${TIPO_LABEL[tipo].toLowerCase()} es libre o no está disponible: elige otro día en tu menú para ponerla.</p>`:''}
+      <p class="fine">La sal, las especias, el ajo y el aceite se dan por hechos. Si falta algo secundario (una verdura de acompañamiento, el pan), te ponemos el plato sin eso; y si tienes un ingrediente parecido, lo cambiamos por ese. Las cantidades se recalculan solas.</p></div>`;
   }
   return `<div class="stack"><span class="eyebrow">Con lo que tienes en casa</span><h1>¿Qué hago con lo que tengo?</h1>
-    <p class="lead">Marca todo lo que tienes en la nevera y en la despensa, elige para qué comida es y pulsa «Ver qué puedo hacer». Las cantidades se ajustan solas a tu objetivo.</p></div>
+    <p class="lead">Marca todo lo que tienes en la nevera y en la despensa, elige para qué comida es y pulsa «Ver qué puedo hacer». Primero te salen los platos que puedes hacer ya, sin comprar nada.</p></div>
   <div><button class="btn small ghost" data-nevcerrar="1">← Volver a mi menú</button></div>
   <div class="panel"><div class="row" style="justify-content:space-between;align-items:center"><h3>1. Marca lo que tienes</h3>${sel.size?`<button class="btn small ghost" data-nevlimpiar="1">Borrar todo</button>`:''}</div>${chips}</div>
   <div class="panel"><h3>2. ¿Para qué comida?</h3><div class="filters" role="group" aria-label="Comida">${TIPOS.map(t=>`<button data-nevtipo="${t}" aria-pressed="${t===tipo}">${TIPO_LABEL[t]}</button>`).join('')}</div>
     <div class="row"><button class="btn primary nevera-gen" id="nevGenBtn" data-nevgen="1" ${sel.size?'':'disabled'}>${textoNevGen(sel.size)}</button></div></div>
-  ${resultados}`;
+  ${resultados}
+  ${(typeof asistenteVisible==='function' && asistenteVisible())?`<div class="panel"><h3>¿Tienes algo que no sale en la lista?</h3>
+    <p class="prep">Escríbelo y el asistente te dice qué ${TIPO_LABEL[tipo].toLowerCase()} puedes hacer con eso y con lo que has marcado, con las cantidades para ti.</p>
+    <div class="field"><label for="nevExtra">Otros ingredientes</label><input class="inp" id="nevExtra" placeholder="Ej.: calamares, puerro, queso de cabra…" autocomplete="off"></div>
+    <div class="row"><button class="btn" data-nevia="1">Preguntar al asistente</button></div></div>`:''}`;
+}
+function preguntaNevera(){
+  const pf=S.cli.perfil, sel=[...neveraSel()].filter(k=>ING[k]).map(k=>nomCorto(k)), extra=($('#nevExtra')?.value||'').trim(), tipo=(S.nevTipo||'comida');
+  const todo=[...sel, ...(extra?[extra]:[])].join(', ');
+  return `Tengo en casa: ${todo}. ¿Qué ${TIPO_LABEL[tipo].toLowerCase()} sana puedo hacer hoy con eso? Dime las cantidades para mí y cómo se hace.`;
 }
 function textoNevGen(n){ return n ? `Ver qué puedo hacer (${n} ${n===1?'ingrediente':'ingredientes'})` : 'Marca al menos un ingrediente'; }
 async function neveraPoner(id){
@@ -2724,6 +2844,7 @@ document.addEventListener('click', async e=>{
   if(t.dataset.nevera){ S.nevera=true; S.nevGen=false; render(); irArriba(); return; }
   if(t.dataset.nevcerrar){ S.nevera=false; render(); irArriba(); return; }
   if(t.dataset.nevtipo){ S.nevTipo=t.dataset.nevtipo; render(); return; }
+  if(t.dataset.nevia){ const extra=($('#nevExtra')?.value||'').trim(); if(!extra && !neveraSel().size){ toast('Escribe o marca al menos un ingrediente.'); return; } const q=preguntaNevera(); S.nevera=false; S.tab='asistente'; render(); irArriba(); enviarPregunta(q); return; }
   if(t.dataset.nevgen){ S.nevGen=true; render(); document.getElementById('nevRes')?.scrollIntoView({behavior:'smooth',block:'start'}); return; }
   if(t.dataset.nevlimpiar){ store.set('nevera_'+S.uid,[]); S.nevGen=false; render(); return; }
   if(t.dataset.nevput){ t.disabled=true; await neveraPoner(t.dataset.nevput); return; }
